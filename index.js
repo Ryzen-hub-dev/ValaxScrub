@@ -1,481 +1,465 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion, useScroll, useSpring, useTransform } from "framer-motion";
+import Image from "next/image";
 import {
-  ArrowRight,
-  Check,
-  ChevronRight,
-  Cpu,
-  Fingerprint,
-  Gauge,
-  Layers3,
-  Shield,
-  Sparkles,
-  Terminal,
+  Lock, Fingerprint, BarChart3, Key, Zap, Code2,
+  FileCode2, Activity, Check, Minus, X,
 } from "lucide-react";
-import { ArcRotateCamera, Color3, Color4, Engine, MeshBuilder, Scene, Vector3, Animation, StandardMaterial, PointLight, HemisphericLight, ShaderMaterial, VertexBuffer, AbstractMesh, Effect } from "@babylonjs/core";
+import PublicNav from "../components/PublicNav";
+import PublicFooter from "../components/PublicFooter";
+import WaveBackground from "../components/WaveBackground";
+import config from "../config.json";
+import pricingData from "../pricing.json";
 
-const NAV = [
-  { id: "protection", label: "Protection" },
-  { id: "workflow", label: "Workflow" },
-  { id: "proof", label: "Proof" },
-  { id: "pricing", label: "Pricing" },
+const CORE_FEATURES = [
+  {
+    icon: Lock,
+    title: "5-Pass Multi-Layer Obfuscation",
+    desc: "Five transformation passes: control flow flattening, string encryption, opaque predicates, dead code injection, and constant blinding. Unreadable. Unreversible.",
+  },
+  {
+    icon: Fingerprint,
+    title: "Triple-Factor HWID Lock",
+    desc: "Bind scripts to hardware ID, IP address, and device fingerprint simultaneously. Prevent sharing with instant revocation and multi-device management.",
+  },
+  {
+    icon: BarChart3,
+    title: "Real-Time Analytics",
+    desc: "Live dashboard with execution tracking, geographic distribution, error monitoring, and usage patterns. Know exactly who runs your scripts.",
+  },
+  {
+    icon: Key,
+    title: "Advanced Key System",
+    desc: "Generate, revoke, and manage license keys with custom expiry, IP limits, and tier-based access control. Full API integration.",
+  },
+  {
+    icon: Zap,
+    title: "Lightning Loader",
+    desc: "15ms average script delivery. Edge-cached, compressed, and optimized for instant execution across all environments.",
+  },
+  {
+    icon: Code2,
+    title: "Developer API",
+    desc: "Full REST API for automation. Manage scripts, keys, users, and analytics programmatically. Webhooks for real-time events.",
+  },
 ];
 
-const LAYERS = [
-  { icon: Shield, title: "Hard to pick apart", text: "Layered checks, runtime guards, and a layout that never gives everything away at once." },
-  { icon: Fingerprint, title: "Identity stays bound", text: "Signals move together, so access feels deliberate instead of noisy." },
-  { icon: Cpu, title: "Light on the critical path", text: "The page stays quick because the heavy work sits off the main rhythm." },
-  { icon: Layers3, title: "Built like a system", text: "Every section does one job and the whole page reads as one machine." },
-  { icon: Gauge, title: "Clear enough to trust", text: "You can see what is happening without digging through clutter." },
+const WHY_ITEMS = [
+  {
+    num: "01",
+    title: "Zero Scripts Cracked",
+    desc: "Our multi-pass obfuscation has never been reversed. Period. We challenge anyone to try.",
+  },
+  {
+    num: "02",
+    title: "Sub-15ms Delivery",
+    desc: "Edge-cached globally. Your scripts load faster than a blink, anywhere in the world.",
+  },
+  {
+    num: "03",
+    title: "Modern Dashboard",
+    desc: "Beautiful, responsive, real-time. Manage everything from a single premium interface.",
+  },
+  {
+    num: "04",
+    title: "Developer-First API",
+    desc: "REST API with webhooks, SDKs, and comprehensive docs. Automate your entire workflow.",
+  },
 ];
 
-const METRICS = [
-  { value: "10+", label: "Protection layers" },
-  { value: "24/7", label: "Always-on runtime" },
-  { value: "99.9%", label: "Deterministic output" },
-  { value: "< 1s", label: "Perceived load time" },
+const SECURITY_ITEMS = [
+  {
+    title: "5-Pass Multi-Layer Obfuscation",
+    desc: "Control flow flattening, opaque predicates, string encryption, and constant blinding — applied in five independent transformation passes.",
+  },
+  {
+    title: "Anti-Tamper Runtime Checks",
+    desc: "Self-verifying code integrity. If any bytecode modification is detected at runtime, the script self-destructs.",
+  },
+  {
+    title: "Triple-Factor Device Lock",
+    desc: "Hardware ID + IP address + browser/device fingerprint — three independent binding factors that all must match.",
+  },
+  {
+    title: "Encrypted Script Delivery",
+    desc: "End-to-end encrypted loader pipeline. Scripts are never transmitted in plaintext. AES-256-GCM at rest, TLS 1.3 in transit.",
+  },
 ];
 
-const PLAN = [
-  { name: "Starter", price: "$0", note: "Try the flow without friction.", features: ["Core protection", "Basic runtime checks", "Standard support"], href: "/register", featured: false },
-  { name: "Pro", price: "$29", note: "For projects that ship often.", features: ["Everything in Starter", "Priority updates", "Usage analytics"], href: "/register", featured: true },
-  { name: "Team", price: "$59", note: "For teams that want consistency.", features: ["Everything in Pro", "Team controls", "Dedicated support"], href: "/register", featured: false },
+const COMPARE_ROWS = [
+  { feature: "Obfuscation Engine",    valax: "5-Pass Multi-Layer",  luarmor: "Standard",      vType: "check",   lType: "check"   },
+  { feature: "HWID Locking",          valax: "Triple-Factor",       luarmor: "Single",         vType: "check",   lType: "check"   },
+  { feature: "Key System",            valax: "Advanced + API",      luarmor: "Basic",          vType: "check",   lType: "check"   },
+  { feature: "Real-Time Analytics",   valax: "Full Dashboard",      luarmor: "Limited",        vType: "check",   lType: "partial" },
+  { feature: "Developer API",         valax: "REST + Webhooks",     luarmor: "Basic",          vType: "check",   lType: "partial" },
+  { feature: "Modern UI",             valax: "Premium Dark",        luarmor: "Outdated",       vType: "check",   lType: "cross"   },
+  { feature: "Script Delivery Speed", valax: "15ms",                luarmor: "~100ms",         vType: "speed",   lType: "neutral" },
+  { feature: "Detection Resistance",  valax: "Anti-Tamper",         luarmor: "Basic",          vType: "check",   lType: "partial" },
+  { feature: "Custom Loader",         valax: "White-Label",         luarmor: "No",             vType: "check",   lType: "cross"   },
 ];
 
-function useActiveSection(ids) {
-  const [active, setActive] = useState(ids[0]);
-  useEffect(() => {
-    const nodes = ids.map((id) => document.getElementById(id)).filter(Boolean);
-    const observer = new IntersectionObserver((entries) => {
-      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (visible?.target?.id) setActive(visible.target.id);
-    }, { rootMargin: "-30% 0px -55% 0px", threshold: [0.15, 0.25, 0.4, 0.6] });
-    nodes.forEach((node) => observer.observe(node));
-    return () => observer.disconnect();
-  }, [ids]);
-  return active;
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i = 0) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.5, delay: i * 0.07, ease: "easeOut" },
+  }),
+};
+const stagger = { visible: { transition: { staggerChildren: 0.07 } } };
+
+function formatNumber(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+  if (n >= 1000) return (n / 1000).toFixed(1) + "K";
+  return n.toLocaleString();
 }
 
-function useBabylonHeroScene({ activeSection, scrollProgress, pointer }) {
-  const mountRef = useRef(null);
+function useCountUp(target, duration = 1400) {
+  const [display, setDisplay] = useState(0);
   useEffect(() => {
-    if (!mountRef.current) return;
-    const canvas = document.createElement("canvas");
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
-    canvas.style.display = "block";
-    mountRef.current.innerHTML = "";
-    mountRef.current.appendChild(canvas);
-
-    const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, adaptToDeviceRatio: true });
-    const scene = new Scene(engine);
-    scene.clearColor = new Color4(0.02, 0.03, 0.05, 0);
-    scene.fogMode = Scene.FOGMODE_EXP2;
-    scene.fogDensity = 0.045;
-    scene.fogColor = new Color3(0.03, 0.04, 0.07);
-
-    const camera = new ArcRotateCamera("heroCam", Math.PI / 2.2, Math.PI / 2.2, 7.8, Vector3.Zero(), scene);
-    camera.attachControl(canvas, true);
-    camera.lowerRadiusLimit = 6.4;
-    camera.upperRadiusLimit = 9.2;
-    camera.wheelPrecision = 40;
-    camera.panningSensibility = 0;
-    camera.inertialAlphaOffset = 0;
-    camera.inertialBetaOffset = 0;
-
-    const hemi = new HemisphericLight("hemi", new Vector3(0, 1, 0), scene);
-    hemi.intensity = 1.2;
-    hemi.diffuse = new Color3(0.95, 0.96, 1.0);
-    hemi.groundColor = new Color3(0.05, 0.06, 0.09);
-
-    const key = new PointLight("key", new Vector3(2.5, 3, 2), scene);
-    key.intensity = 40;
-    key.diffuse = new Color3(0.58, 0.48, 1.0);
-
-    const fill = new PointLight("fill", new Vector3(-2, -1, 3), scene);
-    fill.intensity = 24;
-    fill.diffuse = new Color3(0.31, 0.85, 0.8);
-
-    Effect.ShadersStore.heroVertexShader = `precision highp float; attribute vec3 position; attribute vec3 normal; attribute vec2 uv; uniform mat4 worldViewProjection; varying vec3 vNormal; varying vec2 vUV; void main(void){ vNormal=normal; vUV=uv; gl_Position=worldViewProjection*vec4(position,1.0); }`;
-    Effect.ShadersStore.heroFragmentShader = `precision highp float; varying vec3 vNormal; varying vec2 vUV; uniform float time; uniform float glow; uniform vec3 colorA; uniform vec3 colorB; void main(void){ float band = 0.5 + 0.5 * sin((vUV.x * 9.0) + time * 1.8); float fresnel = pow(1.0 - abs(dot(normalize(vNormal), vec3(0.0,0.0,1.0))), 2.4); vec3 base = mix(colorA, colorB, band); base += fresnel * glow * 0.38; gl_FragColor = vec4(base, 1.0); }`;
-
-    const core = MeshBuilder.CreateIcoSphere("core", { radius: 1.02, subdivisions: 4 }, scene);
-    const coreMat = new ShaderMaterial("coreMat", scene, { vertex: "hero", fragment: "hero" }, { attributes: ["position", "normal", "uv"], uniforms: ["worldViewProjection", "time", "glow", "colorA", "colorB"] });
-    coreMat.setColor3("colorA", Color3.FromHexString("#8b7bff"));
-    coreMat.setColor3("colorB", Color3.FromHexString("#4dd6c9"));
-    coreMat.setFloat("glow", 1.1);
-    core.material = coreMat;
-
-    const rings = [];
-    for (let i = 0; i < 3; i++) {
-      const ring = MeshBuilder.CreateTorus(`ring${i}`, { diameter: 3.6 - i * 0.28, thickness: 0.04, tessellation: 160 }, scene);
-      const m = new StandardMaterial(`ringMat${i}`, scene);
-      m.emissiveColor = new Color3(0.55, 0.48, 1.0);
-      m.diffuseColor = new Color3(0.2, 0.2, 0.26);
-      m.alpha = 0.75;
-      ring.material = m;
-      ring.rotation.set(i === 0 ? 1.55 : 0, i === 1 ? 1.55 : 0, i === 2 ? 1.55 : 0);
-      rings.push(ring);
+    if (target == null) return;
+    if (target === 0) { setDisplay(0); return; }
+    const start = performance.now();
+    let raf;
+    function step(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.floor(eased * target));
+      if (progress < 1) raf = requestAnimationFrame(step);
+      else setDisplay(target);
     }
-
-    const orbitDots = MeshBuilder.CreateSphere("dots", { diameter: 0.08, segments: 12 }, scene);
-    orbitDots.isVisible = false;
-    const dots = [];
-    for (let i = 0; i < 18; i++) {
-      const clone = orbitDots.clone(`dot-${i}`);
-      const dotMat = new StandardMaterial(`dotMat-${i}`, scene);
-      dotMat.emissiveColor = i % 2 ? new Color3(0.31, 0.85, 0.8) : new Color3(0.72, 0.67, 1.0);
-      dotMat.diffuseColor = Color3.Black();
-      clone.material = dotMat;
-      dots.push(clone);
-    }
-
-    const states = {
-      protection: { radius: 7.2, speed: 0.0024, scale: 1.04, glow: 1.15 },
-      workflow: { radius: 7.8, speed: 0.0018, scale: 0.98, glow: 0.95 },
-      proof: { radius: 6.9, speed: 0.0015, scale: 1.0, glow: 1.28 },
-      pricing: { radius: 7.5, speed: 0.0017, scale: 0.94, glow: 0.9 },
-    };
-
-    const onResize = () => engine.resize();
-    window.addEventListener("resize", onResize);
-
-    const clock = scene.getEngine().getDeltaTime ? null : null;
-    let time = 0;
-    const tick = () => {
-      const state = states[activeSection] || states.protection;
-      time += engine.getDeltaTime() * 0.001;
-      const px = pointer?.x ?? 0.5;
-      const py = pointer?.y ?? 0.5;
-      const mx = (px - 0.5) * 2;
-      const my = (py - 0.5) * 2;
-
-      camera.radius += (state.radius - camera.radius) * 0.04;
-      camera.alpha += mx * 0.0015;
-      camera.beta += (-my * 0.001) - (camera.beta - Math.PI / 2.2) * 0.01;
-
-      core.scaling.setAll(1 + (state.scale - 1) * 0.8 + Math.sin(time * 1.2) * 0.02);
-      core.rotation.x += 0.002 + state.speed * 1.8;
-      core.rotation.y += 0.003 + state.speed * 2.4;
-      core.rotation.z += state.speed * 0.7;
-      coreMat.setFloat("time", time);
-      coreMat.setFloat("glow", state.glow);
-
-      rings.forEach((ring, index) => {
-        const dir = index % 2 === 0 ? 1 : -1;
-        ring.rotation.x += state.speed * dir * 0.8;
-        ring.rotation.y += state.speed * dir * 1.1;
-        ring.rotation.z += state.speed * dir * 1.4;
-        ring.scaling.setAll(1 + Math.sin(time * 0.7 + index) * 0.01);
-      });
-
-      dots.forEach((dot, index) => {
-        const a = time * (0.4 + index * 0.01) + index * 0.34;
-        const r = 2.5 + (index % 6) * 0.14;
-        dot.position.x = Math.cos(a) * r;
-        dot.position.y = Math.sin(a * 1.4) * 0.8;
-        dot.position.z = Math.sin(a) * r * 0.28;
-        dot.scaling.setAll(0.9 + Math.sin(time * 2 + index) * 0.08);
-      });
-
-      scene.render();
-      requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-
-    return () => {
-      window.removeEventListener("resize", onResize);
-      dots.forEach((dot) => dot.dispose());
-      orbitDots.dispose();
-      rings.forEach((ring) => ring.dispose());
-      core.dispose();
-      coreMat.dispose();
-      scene.dispose();
-      engine.dispose();
-    };
-  }, [activeSection, pointer, scrollProgress]);
-
-  return mountRef;
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return display;
 }
 
-function FloatingButton({ href, children, className = "" }) {
+function StatItem({ icon: Icon, value, label, loading }) {
+  const counted = useCountUp(loading ? null : value);
   return (
-    <Link href={href} className={`btn ${className}`}>
-      {children}
-      <ArrowRight size={16} />
-    </Link>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "0 32px" }}>
+      <div style={{ color: "var(--accent)", marginBottom: 2 }}><Icon size={18} /></div>
+      <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.03em", color: "var(--text)", minWidth: 60, textAlign: "center" }}>
+        {loading ? (
+          <span style={{ display: "inline-block", width: 56, height: 28, borderRadius: 6, background: "rgba(var(--fg-rgb),0.06)", animation: "pulse 1.4s ease-in-out infinite" }} />
+        ) : formatNumber(counted)}
+      </div>
+      <div style={{ fontSize: 13, color: "var(--text-dim)", fontWeight: 500 }}>{label}</div>
+    </div>
   );
 }
 
-function SectionLabel({ children }) {
-  return <div className="section-label">{children}</div>;
+function CompareIcon({ type, text }) {
+  if (type === "check")   return <span style={{ color: "var(--accent)", display: "flex", alignItems: "center", gap: 6 }}><Check size={15} />{text}</span>;
+  if (type === "cross")   return <span style={{ color: "#ef4444", display: "flex", alignItems: "center", gap: 6 }}><X size={15} />{text}</span>;
+  if (type === "partial") return <span style={{ color: "#f59e0b", display: "flex", alignItems: "center", gap: 6 }}><span style={{ fontSize: 16 }}>⚡</span>{text}</span>;
+  if (type === "speed")   return <span style={{ color: "#22c55e", fontWeight: 600 }}>{text}</span>;
+  return <span style={{ color: "rgba(var(--fg-rgb),0.45)" }}>{text}</span>;
 }
 
-function Hero({ activeSection, pointer, setPointer, scrollProgress }) {
-  const ref = useRef(null);
-  const sceneMountRef = useBabylonHeroScene({ activeSection, scrollProgress, pointer });
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], [0, 120]);
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0.2]);
-  const springY = useSpring(y, { stiffness: 90, damping: 20 });
-  const springOpacity = useSpring(opacity, { stiffness: 90, damping: 22 });
+export default function HomeClient({ session }) {
+  const [stats, setStats] = useState(null);
+  useEffect(() => { fetch("/api/stats").then((r) => r.json()).then(setStats).catch(() => {}); }, []);
 
   return (
-    <section ref={ref} className="hero" onMouseMove={(e) => {
-      const box = e.currentTarget.getBoundingClientRect();
-      setPointer({ x: (e.clientX - box.left) / box.width, y: (e.clientY - box.top) / box.height });
-    }}>
-      <motion.div className="hero-glow hero-glow-left" style={{ y: springY, opacity: springOpacity }} />
-      <motion.div className="hero-glow hero-glow-right" style={{ y: springY, opacity: springOpacity }} />
-
-      <div className="hero-grid">
-        <div className="hero-copy">
-          <SectionLabel>AstroProtect-inspired build</SectionLabel>
-          <h1>Keep the page sharp.<br />Keep the copy calm.</h1>
-          <p className="hero-lead">A cleaner landing page with the same deep, technical mood — less marketing noise, more product weight.</p>
-          <div className="hero-actions">
-            <FloatingButton href="/register" className="btn-primary">Start now</FloatingButton>
-            <FloatingButton href="#protection" className="btn-secondary">See the structure</FloatingButton>
-          </div>
-          <div className="hero-badges">
-            <span><Sparkles size={14} /> No filler</span>
-            <span><Terminal size={14} /> Built for a dark UI</span>
-            <span><Shield size={14} /> Motion with restraint</span>
-          </div>
-        </div>
-
-        <div className="hero-panel">
-          <div className="panel-top"><span className="panel-dot" /><span className="panel-dot" /><span className="panel-dot" /></div>
-          <div className="panel-shell">
-            <div className="panel-title">Runtime snapshot</div>
-            <div ref={sceneMountRef} className="hero-3d-canvas" />
-            <div className="panel-footer"><span>Protected layout</span><ChevronRight size={16} /></div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Protection() {
-  return (
-    <section id="protection" className="section">
-      <div className="section-head">
-        <SectionLabel>Protection</SectionLabel>
-        <h2>Layered, but not loud.</h2>
-        <p>Each layer has a purpose. Nothing is there just to look technical.</p>
-      </div>
-      <div className="layer-grid">
-        {LAYERS.map((item) => (
-          <article key={item.title} className="layer-card">
-            <div className="layer-icon"><item.icon size={20} /></div>
-            <h3>{item.title}</h3>
-            <p>{item.text}</p>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function Workflow() {
-  const steps = [["Drop in your code", "Start with a clean source and move fast."], ["Apply the policy", "Pick the controls you actually need."], ["Ship the result", "Keep the output stable and easy to maintain."]];
-  return (
-    <section id="workflow" className="section section-alt">
-      <div className="section-head narrow">
-        <SectionLabel>Workflow</SectionLabel>
-        <h2>Feels like a product, not a demo.</h2>
-        <p>The page should move with you, not distract you.</p>
-      </div>
-      <div className="workflow">
-        {steps.map(([title, text], index) => (
-          <div key={title} className="workflow-step"><div className="workflow-index">0{index + 1}</div><div><h3>{title}</h3><p>{text}</p></div></div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function Proof() {
-  return (
-    <section id="proof" className="section">
-      <div className="section-head narrow">
-        <SectionLabel>Proof</SectionLabel>
-        <h2>Enough signal to feel real.</h2>
-        <p>Numbers, not hype.</p>
-      </div>
-      <div className="metrics-grid">
-        {METRICS.map((metric) => <div key={metric.label} className="metric-card"><div className="metric-value">{metric.value}</div><div className="metric-label">{metric.label}</div></div>)}
-      </div>
-    </section>
-  );
-}
-
-function Pricing() {
-  return (
-    <section id="pricing" className="section section-alt">
-      <div className="section-head narrow">
-        <SectionLabel>Pricing</SectionLabel>
-        <h2>Simple choices. No fog.</h2>
-        <p>Pick the plan that matches how often you ship.</p>
-      </div>
-      <div className="pricing-grid">
-        {PLAN.map((plan) => (
-          <article key={plan.name} className={`price-card ${plan.featured ? "featured" : ""}`}>
-            <div className="price-header"><div><div className="price-name">{plan.name}</div><div className="price-note">{plan.note}</div></div><div className="price-amount">{plan.price}</div></div>
-            <ul className="feature-list">{plan.features.map((feature) => <li key={feature}><Check size={14} /> {feature}</li>)}</ul>
-            <FloatingButton href={plan.href} className={plan.featured ? "btn-primary full" : "btn-secondary full"}>Choose {plan.name}</FloatingButton>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="footer">
-      <div className="footer-brand">
-        <div className="footer-logo"><Shield size={18} /> AstroProtect</div>
-        <p>Enterprise-grade code protection, presented with a quieter hand.</p>
-      </div>
-      <div className="footer-links">
-        <Link href="#protection">Protection</Link>
-        <Link href="#workflow">Workflow</Link>
-        <Link href="#proof">Proof</Link>
-        <Link href="#pricing">Pricing</Link>
-      </div>
-    </footer>
-  );
-}
-
-export default function Home() {
-  const active = useActiveSection(["protection", "workflow", "proof", "pricing"]);
-  const [scrolled, setScrolled] = useState(false);
-  const [pointer, setPointer] = useState({ x: 0.5, y: 0.5 });
-  const [scrollProgress, setScrollProgress] = useState(0);
-
-  useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 24);
-      const doc = document.documentElement;
-      const max = doc.scrollHeight - window.innerHeight;
-      setScrollProgress(max > 0 ? window.scrollY / max : 0);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const navClass = useMemo(() => (scrolled ? "nav scrolled" : "nav"), [scrolled]);
-
-  return (
-    <div className="page-shell">
-      <style jsx global>{`
-        :root { --bg: #05070c; --bg2: #090d16; --card: rgba(13, 18, 31, 0.72); --card-border: rgba(255,255,255,0.08); --text: #eef2ff; --muted: rgba(238,242,255,0.66); --accent: #8b7bff; --accent2: #4dd6c9; }
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body { margin: 0; background: radial-gradient(circle at top left, rgba(139,123,255,.18), transparent 34%), radial-gradient(circle at top right, rgba(77,214,201,.12), transparent 32%), linear-gradient(180deg, var(--bg), var(--bg2)); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-        a { color: inherit; text-decoration: none; }
-        .page-shell { min-height: 100vh; position: relative; overflow: hidden; }
-        .nav { position: sticky; top: 0; z-index: 20; display: flex; justify-content: center; padding: 18px 20px; backdrop-filter: blur(10px); transition: background .2s ease, border-color .2s ease; }
-        .nav.scrolled { background: rgba(5,7,12,.72); border-bottom: 1px solid rgba(255,255,255,.05); }
-        .nav-inner { width: min(1180px, 100%); display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-        .brand { display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.02em; }
-        .nav-links { display:flex; gap: 18px; flex-wrap: wrap; color: var(--muted); }
-        .nav-links a { position: relative; padding-bottom: 4px; }
-        .nav-links a.active, .nav-links a:hover { color: var(--text); }
-        .nav-links a.active::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); }
-        .nav-cta { display:flex; gap: 10px; }
-        .hero, .section, .footer { width: min(1180px, 100%); margin: 0 auto; padding: 0 20px; }
-        .hero { padding-top: 62px; padding-bottom: 42px; position: relative; }
-        .hero-grid { display:grid; grid-template-columns: 1.18fr .82fr; gap: 28px; align-items: center; }
-        .hero h1 { font-size: clamp(44px, 6vw, 88px); line-height: .95; margin: 12px 0 18px; letter-spacing: -0.05em; }
-        .hero-lead { max-width: 640px; color: var(--muted); font-size: 1.05rem; line-height: 1.7; }
-        .section-label { display:inline-flex; align-items:center; gap:8px; padding: 8px 12px; border: 1px solid rgba(255,255,255,.08); border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.03); font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; }
-        .hero-actions, .footer-links { display:flex; gap: 12px; flex-wrap: wrap; }
-        .btn { display:inline-flex; align-items:center; gap:10px; justify-content:center; padding: 13px 18px; border-radius: 999px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); transition: transform .2s ease, border-color .2s ease, background .2s ease; }
-        .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.22); }
-        .btn-primary { background: linear-gradient(135deg, rgba(139,123,255,.96), rgba(77,214,201,.9)); color: #041018; }
-        .btn-secondary { color: var(--text); }
-        .hero-badges { display:flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; color: var(--muted); }
-        .hero-badges span { display:inline-flex; align-items:center; gap:8px; padding: 9px 12px; border-radius: 999px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); }
-        .hero-panel, .layer-card, .metric-card, .price-card, .workflow-step { background: var(--card); border: 1px solid var(--card-border); box-shadow: 0 30px 80px rgba(0,0,0,.32); backdrop-filter: blur(18px); }
-        .hero-panel { border-radius: 28px; padding: 18px; position: relative; overflow: hidden; }
-        .panel-top { display:flex; gap: 8px; padding-bottom: 18px; }
-        .panel-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.18); }
-        .panel-shell { border-radius: 22px; padding: 26px; background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); }
-        .panel-title { color: var(--muted); text-transform: uppercase; font-size: .78rem; letter-spacing: .14em; margin-bottom: 14px; }
-        .hero-3d-canvas { position: relative; width: 100%; height: 340px; border-radius: 20px; overflow: hidden; background: radial-gradient(circle at 50% 35%, rgba(139,123,255,.16), transparent 42%), linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)); }
-        .hero-3d-canvas canvas { display:block; width:100% !important; height:100% !important; }
-        .panel-footer { display:flex; align-items:center; justify-content:space-between; color: var(--muted); margin-top: 16px; }
-        .hero-glow { position:absolute; inset:auto; width: 360px; height: 360px; filter: blur(70px); opacity: .7; pointer-events:none; }
-        .hero-glow-left { left: -80px; top: 40px; background: rgba(139,123,255,.2); }
-        .hero-glow-right { right: -100px; top: 180px; background: rgba(77,214,201,.16); }
-        .section { padding-top: 70px; padding-bottom: 24px; }
-        .section-alt { padding-top: 32px; }
-        .section-head { max-width: 760px; margin-bottom: 24px; }
-        .section-head.narrow { max-width: 620px; }
-        .section-head h2 { font-size: clamp(30px, 4vw, 56px); line-height: 1; margin: 14px 0; letter-spacing: -.04em; }
-        .section-head p { color: var(--muted); line-height: 1.7; }
-        .layer-grid, .metrics-grid, .pricing-grid { display:grid; gap: 16px; }
-        .layer-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-        .layer-card { border-radius: 22px; padding: 20px; }
-        .layer-icon { width: 42px; height: 42px; border-radius: 12px; display:grid; place-items:center; background: rgba(255,255,255,.06); margin-bottom: 16px; }
-        .layer-card p, .workflow-step p, .price-note { color: var(--muted); line-height: 1.65; }
-        .workflow { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-        .workflow-step { border-radius: 22px; padding: 22px; display:flex; gap: 16px; }
-        .workflow-index { color: var(--accent); font-weight: 700; letter-spacing: .08em; }
-        .metrics-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-        .metric-card { border-radius: 22px; padding: 24px; }
-        .metric-value { font-size: clamp(28px, 4vw, 46px); font-weight: 700; letter-spacing: -.04em; }
-        .metric-label { margin-top: 6px; color: var(--muted); }
-        .pricing-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        .price-card { border-radius: 24px; padding: 24px; }
-        .price-card.featured { outline: 1px solid rgba(139,123,255,.36); transform: translateY(-8px); }
-        .price-header { display:flex; align-items:flex-start; justify-content:space-between; gap: 16px; margin-bottom: 20px; }
-        .price-name { font-size: 1.05rem; font-weight: 700; }
-        .price-amount { font-size: 2.5rem; font-weight: 700; letter-spacing: -.05em; }
-        .feature-list { list-style:none; padding:0; margin:0 0 20px; display:grid; gap: 12px; color: var(--text); }
-        .feature-list li { display:flex; align-items:center; gap: 10px; color: var(--muted); }
-        .full { width: 100%; }
-        .footer { padding-top: 42px; padding-bottom: 54px; display:flex; justify-content:space-between; gap: 20px; border-top: 1px solid rgba(255,255,255,.06); margin-top: 60px; }
-        .footer-logo { display:flex; align-items:center; gap: 10px; font-weight: 700; margin-bottom: 10px; }
-        .footer p { color: var(--muted); max-width: 480px; line-height: 1.6; }
-        @media (max-width: 1100px) { .layer-grid, .metrics-grid, .pricing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hero-grid { grid-template-columns: 1fr; } }
-        @media (max-width: 720px) { .nav-inner { flex-direction: column; align-items: flex-start; } .workflow { grid-template-columns: 1fr; } .layer-grid, .metrics-grid, .pricing-grid { grid-template-columns: 1fr; } .footer { flex-direction: column; } .hero h1 { font-size: clamp(38px, 12vw, 58px); } }
+    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.8} }
+        @keyframes twinkle { 0%,100%{opacity:.2} 50%{opacity:.7} }
+        .section-pill {
+          display: inline-flex; align-items: center;
+          background: rgba(var(--fg-rgb),0.06);
+          border: 1px solid rgba(var(--fg-rgb),0.1);
+          border-radius: 999px; padding: 4px 14px;
+          font-size: 11px; font-weight: 700;
+          letter-spacing: .1em; text-transform: uppercase;
+          color: rgba(var(--fg-rgb),0.5); margin-bottom: 20px;
+        }
+        .compare-row:hover { background: rgba(var(--fg-rgb),0.03); }
+        @keyframes floatOrb {
+          0%,100% { transform: translate(0,0); }
+          50% { transform: translate(-14px,18px); }
+        }
+        .hero-orb { animation: floatOrb 9s ease-in-out infinite; }
+        .hero-orb-alt { animation: floatOrb 11s ease-in-out infinite reverse; }
+        @media (max-width: 768px) {
+          .public-nav-links { display: none !important; }
+          .public-nav-mobile-menu { display: flex !important; }
+          .footer-grid { grid-template-columns: 1fr 1fr !important; }
+          .why-grid { grid-template-columns: 1fr !important; }
+          .pricing-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (min-width: 769px) {
+          .public-nav-mobile-menu { display: none !important; }
+        }
       `}</style>
 
-      <header className={navClass}>
-        <div className="nav-inner">
-          <Link href="/" className="brand"><Shield size={18} /><span>AstroProtect</span></Link>
-          <nav className="nav-links">
-            {NAV.map((item) => <Link key={item.id} href={`#${item.id}`} className={active === item.id ? "active" : ""}>{item.label}</Link>)}
-          </nav>
-          <div className="nav-cta">
-            <Link href="/login" className="btn btn-secondary">Login</Link>
-            <Link href="/register" className="btn btn-primary">Get started</Link>
-          </div>
-        </div>
-      </header>
+      <WaveBackground opacity={0.22} />
 
-      <main>
-        <Hero activeSection={active} pointer={pointer} setPointer={setPointer} scrollProgress={scrollProgress} />
-        <div className="section">
-          <div className="metrics-grid">
-            {METRICS.map((metric) => <div key={metric.label} className="metric-card"><div className="metric-value">{metric.value}</div><div className="metric-label">{metric.label}</div></div>)}
-          </div>
-        </div>
-        <Protection />
-        <Workflow />
-        <Proof />
-        <Pricing />
-      </main>
+      <div style={{ position: "relative", zIndex: 2 }}>
+      <PublicNav session={session} />
 
-      <Footer />
+      {/* ── Hero ── */}
+      <section
+        style={{
+          position: "relative",
+          textAlign: "center",
+          padding: "168px 24px 110px",
+          overflow: "hidden",
+        }}
+      >
+        <div className="bg-grid-fade" />
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 60% 45% at 50% 0%, var(--accent-glow), transparent)", pointerEvents: "none" }} />
+        <div className="glow-orb hero-orb" style={{ width: 320, height: 320, top: -60, left: "18%", background: "var(--accent)", opacity: 0.22 }} />
+        <div className="glow-orb hero-orb-alt" style={{ width: 260, height: 260, top: 60, right: "14%", background: "var(--accent-secondary, var(--accent))", opacity: 0.18 }} />
+        <motion.div initial="hidden" animate="visible" variants={stagger} style={{ position: "relative", maxWidth: 780, margin: "0 auto" }}>
+          <motion.div variants={fadeUp} custom={0} className="section-pill" style={{ margin: "0 auto 26px" }}>
+            Zero scripts cracked · Since day one
+          </motion.div>
+          <motion.h1 variants={fadeUp} custom={1} style={{ fontSize: "clamp(46px,7.5vw,88px)", fontWeight: 900, lineHeight: 1.0, letterSpacing: "-0.04em", marginBottom: 24 }}>
+            Your code, sealed<br />
+            <span className="gradient-text" style={{ backgroundImage: "var(--accent-gradient, var(--accent))" }}>behind a signal</span><br />
+            no one can trace.
+          </motion.h1>
+          <motion.p variants={fadeUp} custom={2} style={{ color: "rgba(var(--fg-rgb),0.5)", fontSize: 17.5, lineHeight: 1.75, maxWidth: 500, margin: "0 auto 42px" }}>
+            {config.site.description}
+          </motion.p>
+          <motion.div variants={fadeUp} custom={3} style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+            <Link href={session ? "/dashboard" : "/login"} className="btn btn-primary btn-lg">
+              Get Started Free <span style={{ fontSize: 18 }}>→</span>
+            </Link>
+            <a href="#features" className="btn btn-secondary btn-lg">
+              See how it works
+            </a>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* ── Stats banner ── */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}
+        style={{ maxWidth: 780, margin: "0 auto", padding: "0 24px 100px" }}>
+        <div className="glass" style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", padding: "28px 16px", gap: 0 }}>
+          <StatItem icon={FileCode2} value={stats?.scripts ?? 0}    label="Scripts protected"  loading={!stats} />
+          <div style={{ width: 1, height: 40, background: "rgba(var(--fg-rgb),0.07)", flexShrink: 0 }} />
+          <StatItem icon={Key}       value={stats?.keys ?? 0}       label="Keys issued"        loading={!stats} />
+          <div style={{ width: 1, height: 40, background: "rgba(var(--fg-rgb),0.07)", flexShrink: 0 }} />
+          <StatItem icon={Activity}  value={stats?.executions ?? 0} label="Executions logged"  loading={!stats} />
+        </div>
+      </motion.div>
+
+      {/* ── Core Features ── */}
+      <section id="features" style={{ maxWidth: 1160, margin: "0 auto", padding: "0 24px 120px" }}>
+        <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} style={{ textAlign: "center", marginBottom: 56 }}>
+          <div className="section-pill">Core Features</div>
+          <h2 style={{ fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 14 }}>
+            Everything You Need to<br />
+            <span style={{ color: "var(--accent)" }}>Ship Securely</span>
+          </h2>
+          <p style={{ color: "rgba(var(--fg-rgb),0.45)", fontSize: 15, maxWidth: 500, margin: "0 auto" }}>
+            From military-grade obfuscation to real-time threat detection — Valax is the complete script protection platform.
+          </p>
+        </motion.div>
+
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={stagger}
+          style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}
+          className="features-grid"
+        >
+          {CORE_FEATURES.map((f, i) => {
+            const Icon = f.icon;
+            return (
+              <motion.div key={f.title} variants={fadeUp} custom={i} className="lift-card"
+                style={{ background: "rgba(var(--fg-rgb),0.03)", border: "1px solid rgba(var(--fg-rgb),0.07)", borderRadius: 16, padding: "28px 24px", cursor: "default" }}
+              >
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--accent-glow)", border: "1px solid rgba(var(--fg-rgb),0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", marginBottom: 18 }}>
+                  <Icon size={20} />
+                </div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10, letterSpacing: "-0.01em" }}>{f.title}</h3>
+                <p style={{ color: "rgba(var(--fg-rgb),0.45)", fontSize: 13.5, lineHeight: 1.7, margin: 0 }}>{f.desc}</p>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+      </section>
+
+      {/* ── Why Valax ── */}
+      <section id="why" style={{ maxWidth: 1160, margin: "0 auto", padding: "0 24px 120px" }}>
+        <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} style={{ textAlign: "center", marginBottom: 56 }}>
+          <div className="section-pill">Why Valax</div>
+          <h2 style={{ fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 14 }}>
+            Built Different. <span style={{ color: "var(--accent)" }}>Built Better.</span>
+          </h2>
+          <p style={{ color: "rgba(var(--fg-rgb),0.45)", fontSize: 15, maxWidth: 540, margin: "0 auto" }}>
+            Valax isn&apos;t just another script platform. It&apos;s a complete ecosystem designed from the ground up for security, speed, and developer experience.
+          </p>
+        </motion.div>
+
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={stagger}
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="why-grid"
+        >
+          {WHY_ITEMS.map((item, i) => (
+            <motion.div key={item.num} variants={fadeUp} custom={i} className="lift-card"
+              style={{ background: "rgba(var(--fg-rgb),0.03)", border: "1px solid rgba(var(--fg-rgb),0.07)", borderRadius: 16, padding: "32px 28px", position: "relative", overflow: "hidden", cursor: "default" }}
+            >
+              <div style={{ position: "absolute", top: 16, right: 24, fontSize: 64, fontWeight: 900, color: "rgba(var(--fg-rgb),0.05)", lineHeight: 1, userSelect: "none" }}>{item.num}</div>
+              <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, letterSpacing: "-0.01em" }}>{item.title}</h3>
+              <p style={{ color: "rgba(var(--fg-rgb),0.45)", fontSize: 14, lineHeight: 1.7, margin: 0 }}>{item.desc}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
+      {/* ── Security ── */}
+      <section id="security" style={{ maxWidth: 1160, margin: "0 auto", padding: "0 24px 120px" }}>
+        <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} style={{ textAlign: "center", marginBottom: 64 }}>
+          <div className="section-pill">Security</div>
+          <h2 style={{ fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 14 }}>
+            Built-In <span style={{ color: "var(--accent)" }}>Fortress-Level</span> Security
+          </h2>
+          <p style={{ color: "rgba(var(--fg-rgb),0.45)", fontSize: 15, maxWidth: 540, margin: "0 auto" }}>
+            Every layer of Valax is designed to protect your intellectual property from reverse engineering, cracking, and unauthorized access.
+          </p>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }} className="security-grid"
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 240, height: 240, borderRadius: 20, background: "var(--accent-glow)", border: "1px solid var(--accent-glow)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 80px var(--accent-glow)" }}>
+              <Image src="/logo.png" alt="Valax Security" width={120} height={120} style={{ filter: "drop-shadow(0 0 24px rgba(59,130,246,0.6))" }} />
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+            {SECURITY_ITEMS.map((item) => (
+              <div key={item.title} style={{ display: "flex", gap: 14 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#22c55e", flexShrink: 0, marginTop: 6, boxShadow: "0 0 8px rgba(34,197,94,0.5)" }} />
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 5 }}>{item.title}</div>
+                  <div style={{ color: "rgba(var(--fg-rgb),0.45)", fontSize: 13.5, lineHeight: 1.7 }}>{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ── Compare ── */}
+      <section id="compare" style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px 120px" }}>
+        <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} style={{ textAlign: "center", marginBottom: 48 }}>
+          <h2 style={{ fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 12 }}>
+            Valax vs <span style={{ color: "var(--accent)" }}>Luarmor</span>
+          </h2>
+          <p style={{ color: "rgba(var(--fg-rgb),0.45)", fontSize: 15 }}>See why developers are switching to Valax.</p>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
+          style={{ background: "rgba(var(--fg-rgb),0.02)", border: "1px solid rgba(var(--fg-rgb),0.08)", borderRadius: 16, overflow: "hidden" }}
+        >
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", padding: "14px 24px", borderBottom: "1px solid rgba(var(--fg-rgb),0.08)", background: "rgba(var(--fg-rgb),0.03)" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(var(--fg-rgb),0.3)" }}>Feature</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(var(--fg-rgb),0.3)" }}>Valax</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(var(--fg-rgb),0.3)" }}>Luarmor</div>
+          </div>
+          {COMPARE_ROWS.map((row, i) => (
+            <div key={row.feature} className="compare-row"
+              style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", padding: "14px 24px", borderBottom: i < COMPARE_ROWS.length - 1 ? "1px solid rgba(var(--fg-rgb),0.05)" : "none", transition: "background 0.15s" }}
+            >
+              <div style={{ fontSize: 14, color: "rgba(var(--fg-rgb),0.55)" }}>{row.feature}</div>
+              <div style={{ fontSize: 14 }}><CompareIcon type={row.vType} text={row.valax} /></div>
+              <div style={{ fontSize: 14 }}><CompareIcon type={row.lType} text={row.luarmor} /></div>
+            </div>
+          ))}
+        </motion.div>
+      </section>
+
+      {/* ── Pricing ── */}
+      <section id="pricing" style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px 120px" }}>
+        <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} style={{ textAlign: "center", marginBottom: 56 }}>
+          <h2 style={{ fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.03em", marginBottom: 12 }}>Simple, Transparent Pricing</h2>
+          <p style={{ color: "rgba(var(--fg-rgb),0.45)", fontSize: 15 }}>Start free, scale as you grow.</p>
+        </motion.div>
+
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={stagger}
+          style={{ display: "grid", gridTemplateColumns: "1fr 1.08fr 1fr", gap: 20, alignItems: "start" }} className="pricing-grid"
+        >
+          {pricingData.plans.map((plan, i) => {
+            const isPro = plan.popular;
+            return (
+              <motion.div key={plan.id} variants={fadeUp} custom={i} className={isPro ? "" : "lift-card"}
+                style={{
+                  background: "rgba(var(--fg-rgb),0.03)",
+                  border: `1px solid ${isPro ? "rgba(var(--fg-rgb),0.15)" : "rgba(var(--fg-rgb),0.07)"}`,
+                  borderRadius: 18, padding: "28px 26px",
+                  position: "relative",
+                  boxShadow: isPro ? "0 0 40px var(--accent-glow)" : "none",
+                }}
+              >
+                {isPro && (
+                  <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", background: "var(--accent)", color: "#fff", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", padding: "4px 14px", borderRadius: 999 }}>
+                    Most Popular
+                  </div>
+                )}
+                <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 4 }}>{plan.name}</div>
+                <div style={{ color: "rgba(var(--fg-rgb),0.4)", fontSize: 13, marginBottom: 20 }}>{plan.subtitle}</div>
+                <div style={{ marginBottom: 20 }}>
+                  {plan.price === 0 ? (
+                    <div style={{ fontSize: 48, fontWeight: 900, letterSpacing: "-0.04em", color: "var(--accent)" }}>Free</div>
+                  ) : (
+                    <div style={{ display: "flex", alignItems: "flex-end", gap: 4 }}>
+                      <span style={{ fontSize: 48, fontWeight: 900, letterSpacing: "-0.04em" }}>${plan.price}</span>
+                      <span style={{ color: "rgba(var(--fg-rgb),0.4)", fontSize: 14, marginBottom: 10 }}>/mo</span>
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 28 }}>
+                  {plan.features.filter((f) => f.included).map((f) => (
+                    <div key={f.label} style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13 }}>
+                      <Check size={13} style={{ color: "var(--accent)", flexShrink: 0 }} />
+                      <span style={{ color: "rgba(var(--fg-rgb),0.7)" }}>
+                        {f.label}
+                        {f.detail && (
+                          <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, color: "var(--accent)", background: "var(--accent-glow)", padding: "1px 7px", borderRadius: 10 }}>
+                            {f.detail}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <Link
+                  href={session ? "/dashboard/upgrade" : "/login"}
+                  className={isPro ? "btn btn-primary" : "btn btn-secondary"}
+                  style={{ display: "flex", width: "100%" }}
+                >
+                  {plan.cta}
+                </Link>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+      </section>
+
+      {/* ── Final CTA ── */}
+      <motion.section initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
+        style={{ textAlign: "center", padding: "0 24px 140px" }}
+      >
+        <div style={{ maxWidth: 600, margin: "0 auto" }}>
+          <h2 style={{ fontSize: "clamp(32px,5vw,56px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 18 }}>
+            Ready to Protect<br /><span style={{ color: "var(--accent)" }}>Your Scripts?</span>
+          </h2>
+          <p style={{ color: "rgba(var(--fg-rgb),0.45)", fontSize: 16, marginBottom: 36 }}>
+            {config.site.description}
+          </p>
+          <Link href={session ? "/dashboard" : "/login"} className="btn btn-primary btn-lg">
+            Get Started Free <span style={{ fontSize: 18 }}>→</span>
+          </Link>
+        </div>
+      </motion.section>
+
+      <PublicFooter />
+      </div>
     </div>
   );
 }
