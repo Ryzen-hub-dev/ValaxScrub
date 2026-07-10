@@ -154,23 +154,23 @@ function StatItem({ icon: Icon, value, label, loading }) {
   const counted = useCountUp(loading ? null : value);
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "0 32px" }}>
-      <div style={{ color: "var(--accent)", marginBottom: 2 }}><Icon size={18} /></div>
-      <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.03em", color: "var(--text)", minWidth: 60, textAlign: "center" }}>
+      <div style={{ color: "#8fb0ff", marginBottom: 2 }}><Icon size={18} /></div>
+      <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.03em", color: "#f5f8ff", minWidth: 60, textAlign: "center" }}>
         {loading ? (
-          <span style={{ display: "inline-block", width: 56, height: 28, borderRadius: 6, background: "rgba(var(--fg-rgb),0.06)", animation: "pulse 1.4s ease-in-out infinite" }} />
+          <span style={{ display: "inline-block", width: 56, height: 28, borderRadius: 6, background: "rgba(255,255,255,0.05)", animation: "pulse 1.4s ease-in-out infinite" }} />
         ) : formatNumber(counted)}
       </div>
-      <div style={{ fontSize: 13, color: "var(--text-dim)", fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: 13, color: "rgba(245,248,255,0.64)", fontWeight: 500 }}>{label}</div>
     </div>
   );
 }
 
 function CompareIcon({ type, text }) {
-  if (type === "check")   return <span style={{ color: "var(--accent)", display: "flex", alignItems: "center", gap: 6 }}><Check size={15} />{text}</span>;
-  if (type === "cross")   return <span style={{ color: "#ef4444", display: "flex", alignItems: "center", gap: 6 }}><X size={15} />{text}</span>;
-  if (type === "partial") return <span style={{ color: "#f59e0b", display: "flex", alignItems: "center", gap: 6 }}><span style={{ fontSize: 16 }}>⚡</span>{text}</span>;
-  if (type === "speed")   return <span style={{ color: "#22c55e", fontWeight: 600 }}>{text}</span>;
-  return <span style={{ color: "rgba(var(--fg-rgb),0.45)" }}>{text}</span>;
+  if (type === "check")   return <span style={{ color: "#8fb0ff", display: "flex", alignItems: "center", gap: 6 }}><Check size={15} />{text}</span>;
+  if (type === "cross")   return <span style={{ color: "#ff6b6b", display: "flex", alignItems: "center", gap: 6 }}><X size={15} />{text}</span>;
+  if (type === "partial") return <span style={{ color: "#f0b25d", display: "flex", alignItems: "center", gap: 6 }}><span style={{ fontSize: 16 }}>⚡</span>{text}</span>;
+  if (type === "speed")   return <span style={{ color: "#9effb8", fontWeight: 600 }}>{text}</span>;
+  return <span style={{ color: "rgba(245,248,255,0.52)" }}>{text}</span>;
 }
 
 export default function HomeClient({ session }) {
@@ -183,24 +183,38 @@ export default function HomeClient({ session }) {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <style>{`
-        @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.8} }
-        @keyframes twinkle { 0%,100%{opacity:.2} 50%{opacity:.7} }
+        @keyframes pulse { 0%,100%{opacity:.35} 50%{opacity:.85} }
         .section-pill {
           display: inline-flex; align-items: center;
-          background: rgba(var(--fg-rgb),0.06);
-          border: 1px solid rgba(var(--fg-rgb),0.1);
-          border-radius: 999px; padding: 4px 14px;
+          background: rgba(13, 22, 44, 0.8);
+          border: 1px solid rgba(121, 150, 255, 0.14);
+          border-radius: 999px; padding: 5px 14px;
           font-size: 11px; font-weight: 700;
-          letter-spacing: .1em; text-transform: uppercase;
-          color: rgba(var(--fg-rgb),0.5); margin-bottom: 20px;
+          letter-spacing: .12em; text-transform: uppercase;
+          color: rgba(245,248,255,0.76); margin-bottom: 20px;
+          backdrop-filter: blur(10px);
         }
-        .compare-row:hover { background: rgba(var(--fg-rgb),0.03); }
+        .compare-row:hover { background: rgba(255,255,255,0.025); }
         @keyframes floatOrb {
           0%,100% { transform: translate(0,0); }
           50% { transform: translate(-14px,18px); }
         }
         .hero-orb { animation: floatOrb 9s ease-in-out infinite; }
         .hero-orb-alt { animation: floatOrb 11s ease-in-out infinite reverse; }
+        .glass-card {
+          background: linear-gradient(180deg, rgba(8,13,27,0.9), rgba(3,5,12,0.96));
+          border: 1px solid rgba(121,150,255,0.12);
+          box-shadow: 0 24px 80px rgba(0,0,0,0.34);
+          backdrop-filter: blur(12px);
+        }
+        .lift-card {
+          transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
+        }
+        .lift-card:hover { transform: translateY(-3px); border-color: rgba(121,150,255,0.26) !important; }
+        .btn { border-radius: 18px !important; border: 0 !important; }
+        .btn-primary { background: linear-gradient(180deg, #6f95ff, #2d57d6) !important; color: #fff !important; box-shadow: 0 18px 40px rgba(45,87,214,0.24); }
+        .btn-secondary { background: rgba(13, 22, 44, 0.92) !important; color: #f5f8ff !important; border: 1px solid rgba(121,150,255,0.14) !important; }
+        .gradient-text { background: linear-gradient(180deg, #f7fbff, #8fb0ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
         @media (max-width: 768px) {
           .public-nav-links { display: none !important; }
           .public-nav-mobile-menu { display: flex !important; }
@@ -213,7 +227,7 @@ export default function HomeClient({ session }) {
         }
       `}</style>
 
-      <WaveBackground opacity={0.22} />
+      <WaveBackground opacity={0.18} />
 
       <div style={{ position: "relative", zIndex: 2 }}>
       <PublicNav session={session} />
@@ -268,7 +282,7 @@ export default function HomeClient({ session }) {
       {/* ── Stats banner ── */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}
         style={{ maxWidth: 780, margin: "0 auto", padding: "0 24px 100px" }}>
-        <div className="glass" style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", padding: "28px 16px", gap: 0 }}>
+        <div className="glass-card" style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", padding: "28px 16px", gap: 0, borderRadius: 22 }}>
           <StatItem icon={FileCode2} value={stats?.scripts ?? 0}    label="Scripts protected"  loading={!stats} />
           <div style={{ width: 1, height: 40, background: "rgba(var(--fg-rgb),0.07)", flexShrink: 0 }} />
           <StatItem icon={Key}       value={stats?.keys ?? 0}       label="Keys issued"        loading={!stats} />
@@ -311,8 +325,8 @@ export default function HomeClient({ session }) {
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="why-grid"
         >
           {WHY_ITEMS.map((item, i) => (
-            <motion.div key={item.num} variants={fadeUp} custom={i} className="lift-card"
-              style={{ background: "rgba(var(--fg-rgb),0.03)", border: "1px solid rgba(var(--fg-rgb),0.07)", borderRadius: 16, padding: "32px 28px", position: "relative", overflow: "hidden", cursor: "default" }}
+            <motion.div key={item.num} variants={fadeUp} custom={i} className="lift-card glass-card"
+              style={{ borderRadius: 16, padding: "32px 28px", position: "relative", overflow: "hidden", cursor: "default" }}
             >
               <div style={{ position: "absolute", top: 16, right: 24, fontSize: 64, fontWeight: 900, color: "rgba(var(--fg-rgb),0.05)", lineHeight: 1, userSelect: "none" }}>{item.num}</div>
               <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, letterSpacing: "-0.01em" }}>{item.title}</h3>
@@ -327,111 +341,132 @@ export default function HomeClient({ session }) {
         <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} style={{ textAlign: "center", marginBottom: 64 }}>
           <div className="section-pill">Security</div>
           <h2 style={{ fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 14 }}>
-            Built-In <span style={{ color: "var(--accent)" }}>Fortress-Level</span> Security
+            Built-In <span style={{ color: "#8fb0ff" }}>Fortress-Level</span> Security
           </h2>
-          <p style={{ color: "rgba(var(--fg-rgb),0.45)", fontSize: 15, maxWidth: 540, margin: "0 auto" }}>
-            Every layer of Valax is designed to protect your intellectual property from reverse engineering, cracking, and unauthorized access.
+          <p style={{ color: "rgba(245,248,255,0.58)", fontSize: 15, maxWidth: 540, margin: "0 auto" }}>
+            Every layer is sequenced to keep the output hard to read without making the interface feel heavy.
           </p>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }} className="security-grid"
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 36, alignItems: "stretch" }} className="security-grid"
         >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ width: 240, height: 240, borderRadius: 20, background: "var(--accent-glow)", border: "1px solid var(--accent-glow)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 80px var(--accent-glow)" }}>
-              <Image src="/logo.png" alt="Valax Security" width={120} height={120} style={{ filter: "drop-shadow(0 0 24px rgba(59,130,246,0.6))" }} />
+          <motion.div className="glass-card lift-card" style={{ borderRadius: 22, padding: 28 }} whileHover={{ y: -3 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+              <div style={{ fontSize: 12, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(245,248,255,0.42)" }}>Security Layers</div>
+              <div style={{ borderRadius: 999, padding: "7px 12px", background: "rgba(143,176,255,0.12)", color: "#dbe7ff", fontSize: 12, fontWeight: 700 }}>Live</div>
             </div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-            {SECURITY_ITEMS.map((item) => (
-              <div key={item.title} style={{ display: "flex", gap: 14 }}>
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#22c55e", flexShrink: 0, marginTop: 6, boxShadow: "0 0 8px rgba(34,197,94,0.5)" }} />
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 5 }}>{item.title}</div>
-                  <div style={{ color: "rgba(var(--fg-rgb),0.45)", fontSize: 13.5, lineHeight: 1.7 }}>{item.desc}</div>
+            <div style={{ display: "grid", gap: 14 }}>
+              {SECURITY_ITEMS.map((item, idx) => (
+                <div key={item.title} style={{ display: "grid", gridTemplateColumns: "22px 1fr", gap: 14, alignItems: "start", padding: "14px 14px", borderRadius: 16, background: idx % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: idx === 0 ? "#8fb0ff" : idx === 1 ? "#9effb8" : idx === 2 ? "#f0b25d" : "#7ea6ff", marginTop: 7, boxShadow: `0 0 10px ${idx === 1 ? "rgba(158,255,184,0.45)" : "rgba(143,176,255,0.35)"}` }} />
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6, color: "#f5f8ff" }}>{item.title}</div>
+                    <div style={{ color: "rgba(245,248,255,0.58)", fontSize: 13.5, lineHeight: 1.72 }}>{item.desc}</div>
+                  </div>
                 </div>
-              </div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div className="glass-card lift-card" style={{ borderRadius: 22, padding: 28, position: "relative", overflow: "hidden" }} whileHover={{ y: -3 }}>
+            <div style={{ fontSize: 12, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(245,248,255,0.42)", marginBottom: 18 }}>Obfuscation Pulse</div>
+            <div style={{ display: "grid", gap: 12 }}>
+              {[
+                ["Control flow", "Flattened + re-routed"],
+                ["Strings", "Late-bound and masked"],
+                ["Runtime", "Tamper-aware checks"],
+                ["Delivery", "Low-footprint bootstrap"],
+              ].map(([a, b]) => (
+                <div key={a} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "13px 14px", borderRadius: 14, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(121,150,255,0.08)" }}>
+                  <span style={{ color: "#f5f8ff", fontWeight: 600 }}>{a}</span>
+                  <span style={{ color: "rgba(245,248,255,0.58)" }}>{b}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* ── Compare ── */}
+      <section id="compare" style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px 120px" }}>
+        <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} style={{ textAlign: "center", marginBottom: 48 }}>
+          <div className="section-pill">Compare</div>
+          <h2 style={{ fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 12 }}>
+            Valax vs <span style={{ color: "#8fb0ff" }}>Luarmor</span>
+          </h2>
+          <p style={{ color: "rgba(245,248,255,0.58)", fontSize: 15 }}>The comparison panel stays readable, but the emphasis follows your scroll.</p>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="glass-card" style={{ borderRadius: 20, overflow: "hidden" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", padding: "14px 24px", borderBottom: "1px solid rgba(121,150,255,0.12)", background: "rgba(255,255,255,0.02)" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(245,248,255,0.42)" }}>Feature</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(245,248,255,0.42)" }}>Valax</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(245,248,255,0.42)" }}>Luarmor</div>
+          </div>
+          <div style={{ display: "grid", gap: 0 }}>
+            {COMPARE_ROWS.map((row, i) => (
+              <motion.div key={row.feature} className="compare-row"
+                whileHover={{ x: 6 }}
+                style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", padding: "14px 24px", borderBottom: i < COMPARE_ROWS.length - 1 ? "1px solid rgba(121,150,255,0.08)" : "none", transition: "background 0.15s" }}
+              >
+                <div style={{ fontSize: 14, color: "rgba(245,248,255,0.58)" }}>{row.feature}</div>
+                <div style={{ fontSize: 14 }}><CompareIcon type={row.vType} text={row.valax} /></div>
+                <div style={{ fontSize: 14 }}><CompareIcon type={row.lType} text={row.luarmor} /></div>
+              </motion.div>
             ))}
           </div>
         </motion.div>
       </section>
 
-      {/* ── Compare ── */}
-      <section id="compare" style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px 120px" }}>
-        <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} style={{ textAlign: "center", marginBottom: 48 }}>
-          <h2 style={{ fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 12 }}>
-            Valax vs <span style={{ color: "var(--accent)" }}>Luarmor</span>
-          </h2>
-          <p style={{ color: "rgba(var(--fg-rgb),0.45)", fontSize: 15 }}>See why developers are switching to Valax.</p>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
-          style={{ background: "rgba(var(--fg-rgb),0.02)", border: "1px solid rgba(var(--fg-rgb),0.08)", borderRadius: 16, overflow: "hidden" }}
-        >
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", padding: "14px 24px", borderBottom: "1px solid rgba(var(--fg-rgb),0.08)", background: "rgba(var(--fg-rgb),0.03)" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(var(--fg-rgb),0.3)" }}>Feature</div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(var(--fg-rgb),0.3)" }}>Valax</div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(var(--fg-rgb),0.3)" }}>Luarmor</div>
-          </div>
-          {COMPARE_ROWS.map((row, i) => (
-            <div key={row.feature} className="compare-row"
-              style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", padding: "14px 24px", borderBottom: i < COMPARE_ROWS.length - 1 ? "1px solid rgba(var(--fg-rgb),0.05)" : "none", transition: "background 0.15s" }}
-            >
-              <div style={{ fontSize: 14, color: "rgba(var(--fg-rgb),0.55)" }}>{row.feature}</div>
-              <div style={{ fontSize: 14 }}><CompareIcon type={row.vType} text={row.valax} /></div>
-              <div style={{ fontSize: 14 }}><CompareIcon type={row.lType} text={row.luarmor} /></div>
-            </div>
-          ))}
-        </motion.div>
-      </section>
-
       {/* ── Pricing ── */}
-      <section id="pricing" style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px 120px" }}>
+      <section id="pricing" style={{ maxWidth: 1160, margin: "0 auto", padding: "0 24px 120px" }}>
         <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} style={{ textAlign: "center", marginBottom: 56 }}>
+          <div className="section-pill">Pricing</div>
           <h2 style={{ fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.03em", marginBottom: 12 }}>Simple, Transparent Pricing</h2>
-          <p style={{ color: "rgba(var(--fg-rgb),0.45)", fontSize: 15 }}>Start free, scale as you grow.</p>
+          <p style={{ color: "rgba(245,248,255,0.58)", fontSize: 15 }}>Plans stay quiet, readable, and aligned with the rest of the page.</p>
         </motion.div>
 
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} variants={stagger}
-          style={{ display: "grid", gridTemplateColumns: "1fr 1.08fr 1fr", gap: 20, alignItems: "start" }} className="pricing-grid"
+          style={{ display: "grid", gridTemplateColumns: "1fr 1.08fr 1fr", gap: 20, alignItems: "stretch" }} className="pricing-grid"
         >
           {pricingData.plans.map((plan, i) => {
             const isPro = plan.popular;
             return (
-              <motion.div key={plan.id} variants={fadeUp} custom={i} className={isPro ? "" : "lift-card"}
+              <motion.div key={plan.id} variants={fadeUp} custom={i} className={isPro ? "glass-card" : "glass-card lift-card"}
+                whileHover={{ y: -4 }}
                 style={{
-                  background: "rgba(var(--fg-rgb),0.03)",
-                  border: `1px solid ${isPro ? "rgba(var(--fg-rgb),0.15)" : "rgba(var(--fg-rgb),0.07)"}`,
-                  borderRadius: 18, padding: "28px 26px",
+                  borderRadius: 20,
+                  padding: "28px 26px",
                   position: "relative",
-                  boxShadow: isPro ? "0 0 40px var(--accent-glow)" : "none",
+                  boxShadow: isPro ? "0 0 44px rgba(111,149,255,0.14)" : "none",
                 }}
               >
                 {isPro && (
-                  <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", background: "var(--accent)", color: "#fff", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", padding: "4px 14px", borderRadius: 999 }}>
+                  <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", background: "#6f95ff", color: "#fff", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", padding: "4px 14px", borderRadius: 999 }}>
                     Most Popular
                   </div>
                 )}
                 <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 4 }}>{plan.name}</div>
-                <div style={{ color: "rgba(var(--fg-rgb),0.4)", fontSize: 13, marginBottom: 20 }}>{plan.subtitle}</div>
+                <div style={{ color: "rgba(245,248,255,0.52)", fontSize: 13, marginBottom: 20 }}>{plan.subtitle}</div>
                 <div style={{ marginBottom: 20 }}>
                   {plan.price === 0 ? (
-                    <div style={{ fontSize: 48, fontWeight: 900, letterSpacing: "-0.04em", color: "var(--accent)" }}>Free</div>
+                    <div style={{ fontSize: 48, fontWeight: 900, letterSpacing: "-0.04em", color: "#8fb0ff" }}>Free</div>
                   ) : (
                     <div style={{ display: "flex", alignItems: "flex-end", gap: 4 }}>
-                      <span style={{ fontSize: 48, fontWeight: 900, letterSpacing: "-0.04em" }}>${plan.price}</span>
-                      <span style={{ color: "rgba(var(--fg-rgb),0.4)", fontSize: 14, marginBottom: 10 }}>/mo</span>
+                      <span style={{ fontSize: 48, fontWeight: 900, letterSpacing: "-0.04em", color: "#f5f8ff" }}>${plan.price}</span>
+                      <span style={{ color: "rgba(245,248,255,0.52)", fontSize: 14, marginBottom: 10 }}>/mo</span>
                     </div>
                   )}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 28 }}>
                   {plan.features.filter((f) => f.included).map((f) => (
                     <div key={f.label} style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13 }}>
-                      <Check size={13} style={{ color: "var(--accent)", flexShrink: 0 }} />
-                      <span style={{ color: "rgba(var(--fg-rgb),0.7)" }}>
+                      <Check size={13} style={{ color: "#8fb0ff", flexShrink: 0 }} />
+                      <span style={{ color: "rgba(245,248,255,0.74)" }}>
                         {f.label}
                         {f.detail && (
-                          <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, color: "var(--accent)", background: "var(--accent-glow)", padding: "1px 7px", borderRadius: 10 }}>
+                          <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, color: "#8fb0ff", background: "rgba(143,176,255,0.12)", padding: "1px 7px", borderRadius: 10 }}>
                             {f.detail}
                           </span>
                         )}
