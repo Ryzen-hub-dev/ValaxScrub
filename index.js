@@ -2,18 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import {
   ArrowRight,
   Check,
   ChevronRight,
-  Cpu,
-  Fingerprint,
-  Gauge,
-  Layers3,
   Shield,
   Sparkles,
-  Zap,
+  Terminal,
+  Layers3,
+  Cpu,
+  Gauge,
+  Fingerprint,
 } from "lucide-react";
 
 const NAV = [
@@ -26,428 +26,473 @@ const NAV = [
 const LAYERS = [
   {
     icon: Shield,
-    title: "Layered protection",
-    text: "Multiple passes, distinct transforms, and runtime checks keep the surface hard to read and harder to break.",
+    title: "Hard to pick apart",
+    text: "The surface stays tight: layered checks, runtime guards, and a layout that does not hand everything over at first glance.",
   },
   {
     icon: Fingerprint,
-    title: "Identity locked",
-    text: "Keys, sessions, and device signals move together so access feels strict without feeling clunky.",
+    title: "Identity stays bound",
+    text: "Sessions, keys, and device signals move together so access feels deliberate instead of noisy.",
   },
   {
     icon: Cpu,
-    title: "Fast runtime",
-    text: "Heavy work stays out of the critical path, preserving a snappy product feel under load.",
+    title: "Light on the critical path",
+    text: "The page feels quick because the heavy work stays out of the way and the motion stays controlled.",
   },
   {
     icon: Layers3,
     title: "Built like a system",
-    text: "The UI is structured like a live control surface, not a marketing page with extra noise.",
+    text: "Every section has a job, and the whole thing reads more like a product shell than a promo page.",
   },
   {
     icon: Gauge,
-    title: "Clear telemetry",
-    text: "Operators can see what is happening without digging through buried controls or vague summaries.",
-  },
-  {
-    icon: Zap,
-    title: "Deliberate motion",
-    text: "Motion is used to guide attention, create depth, and keep the interface feeling engineered.",
+    title: "Clear enough to trust",
+    text: "You can see what the page is doing without digging through clutter or filler copy.",
   },
 ];
 
 const METRICS = [
-  { label: "Active protections", value: 12 },
-  { label: "Signals tracked", value: 98 },
-  { label: "Median response", value: 14 },
+  { value: "10+", label: "Protection layers" },
+  { value: "24/7", label: "Always-on runtime" },
+  { value: "99.9%", label: "Deterministic output" },
+  { value: "< 1s", label: "Perceived load time" },
 ];
 
-const STEPS = [
-  { k: "01", title: "Signal", text: "The hero establishes the visual core immediately and leaves room for the rest of the page to unfold." },
-  { k: "02", title: "Depth", text: "Glass panels, shadows, and perspective create a layered surface that feels physical." },
-  { k: "03", title: "Control", text: "Feature blocks and comparisons appear like part of the same machine, not separate sections." },
-  { k: "04", title: "Commit", text: "The final CTA closes the loop with calm confidence instead of hype." },
+const PLAN = [
+  {
+    name: "Starter",
+    price: "$0",
+    note: "Try the flow without friction.",
+    features: ["Core protection", "Basic runtime checks", "Standard support"],
+    href: "/register",
+    featured: false,
+  },
+  {
+    name: "Pro",
+    price: "$29",
+    note: "For projects that ship often.",
+    features: ["Everything in Starter", "Priority updates", "Usage analytics"],
+    href: "/register",
+    featured: true,
+  },
+  {
+    name: "Team",
+    price: "$59",
+    note: "For teams that want consistency.",
+    features: ["Everything in Pro", "Team controls", "Dedicated support"],
+    href: "/register",
+    featured: false,
+  },
 ];
 
-const PLANS = [
-  { name: "Starter", price: "$0", note: "For testing the pipeline.", featured: false, points: ["Core protection", "Basic telemetry", "Community support"] },
-  { name: "Pro", price: "$29", note: "For live products.", featured: true, points: ["Advanced transforms", "Live signals", "Priority support"] },
-  { name: "Studio", price: "$79", note: "For teams shipping at speed.", featured: false, points: ["Multiple projects", "Dedicated help", "High-trust workflows"] },
-];
-
-function useCountUp(target, duration = 1200) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    const start = performance.now();
-    let raf = 0;
-    const tick = (now) => {
-      const t = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setValue(Math.round(eased * target));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
-  return value;
-}
-
-function Stat({ icon: Icon, label, value }) {
-  const counted = useCountUp(value);
-  return (
-    <div className="stat">
-      <div className="stat-icon"><Icon size={16} /></div>
-      <div className="stat-value">{counted.toLocaleString()}</div>
-      <div className="stat-label">{label}</div>
-    </div>
-  );
-}
-
-function SectionTitle({ eyebrow, title, text }) {
-  return (
-    <div className="section-title">
-      <div className="eyebrow">{eyebrow}</div>
-      <h2>{title}</h2>
-      <p>{text}</p>
-    </div>
-  );
-}
-
-export default function HomeClient({ session }) {
-  const [active, setActive] = useState("protection");
-  const [mouse, setMouse] = useState({ x: 0.5, y: 0.5 });
-  const heroRef = useRef(null);
-  const rotX = useSpring(useTransform(useMotionValue(mouse.y), [0, 1], [16, -16]), { stiffness: 120, damping: 18 });
-  const rotY = useSpring(useTransform(useMotionValue(mouse.x), [0, 1], [-18, 18]), { stiffness: 120, damping: 18 });
+function useActiveSection(ids) {
+  const [active, setActive] = useState(ids[0]);
 
   useEffect(() => {
-    const nodes = NAV.map((item) => document.getElementById(item.id)).filter(Boolean);
-    const io = new IntersectionObserver(
+    const nodes = ids.map((id) => document.getElementById(id)).filter(Boolean);
+    const observer = new IntersectionObserver(
       (entries) => {
-        const hit = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (hit) setActive(hit.target.id);
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible?.target?.id) setActive(visible.target.id);
       },
-      { threshold: [0.22, 0.38, 0.55] }
+      { rootMargin: "-30% 0px -55% 0px", threshold: [0.15, 0.25, 0.4, 0.6] }
     );
-    nodes.forEach((n) => io.observe(n));
-    return () => io.disconnect();
+    nodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, [ids]);
+
+  return active;
+}
+
+function FloatingButton({ href, children, className = "" }) {
+  return (
+    <Link href={href} className={`btn ${className}`}>
+      {children}
+      <ArrowRight size={16} />
+    </Link>
+  );
+}
+
+function SectionLabel({ children }) {
+  return <div className="section-label">{children}</div>;
+}
+
+function Hero() {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0.2]);
+  const springY = useSpring(y, { stiffness: 90, damping: 20 });
+  const springOpacity = useSpring(opacity, { stiffness: 90, damping: 22 });
+
+  return (
+    <section ref={ref} className="hero">
+      <motion.div className="hero-glow hero-glow-left" style={{ y: springY, opacity: springOpacity }} />
+      <motion.div className="hero-glow hero-glow-right" style={{ y: springY, opacity: springOpacity }} />
+
+      <div className="hero-grid">
+        <div className="hero-copy">
+          <SectionLabel>AstroProtect-inspired build</SectionLabel>
+          <h1>
+            Keep the page sharp.
+            <br />
+            Keep the copy calm.
+          </h1>
+          <p className="hero-lead">
+            A cleaner landing page with the same deep, technical mood — less marketing noise,
+            more product weight.
+          </p>
+
+          <div className="hero-actions">
+            <FloatingButton href="/register" className="btn-primary">
+              Start now
+            </FloatingButton>
+            <FloatingButton href="#protection" className="btn-secondary">
+              See the structure
+            </FloatingButton>
+          </div>
+
+          <div className="hero-badges">
+            <span><Sparkles size={14} /> No filler</span>
+            <span><Terminal size={14} /> Built for a dark UI</span>
+            <span><Shield size={14} /> Motion with restraint</span>
+          </div>
+        </div>
+
+        <div className="hero-panel">
+          <div className="panel-top">
+            <span className="panel-dot" />
+            <span className="panel-dot" />
+            <span className="panel-dot" />
+          </div>
+          <div className="panel-shell">
+            <div className="panel-title">Runtime snapshot</div>
+            <div className="panel-code">
+              <div><span className="muted">status</span> locked</div>
+              <div><span className="muted">mode</span> steady</div>
+              <div><span className="muted">surface</span> quiet</div>
+              <div><span className="muted">motion</span> controlled</div>
+            </div>
+            <div className="panel-footer">
+              <span>Protected layout</span>
+              <ChevronRight size={16} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Protection() {
+  return (
+    <section id="protection" className="section">
+      <div className="section-head">
+        <SectionLabel>Protection</SectionLabel>
+        <h2>Layered, but not loud.</h2>
+        <p>Each layer has a purpose. Nothing is there just to look technical.</p>
+      </div>
+
+      <div className="layer-grid">
+        {LAYERS.map((item) => (
+          <article key={item.title} className="layer-card">
+            <div className="layer-icon"><item.icon size={20} /></div>
+            <h3>{item.title}</h3>
+            <p>{item.text}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Workflow() {
+  const steps = [
+    ["Drop in your code", "Start with a clean source and move fast."],
+    ["Apply the policy", "Pick the controls you actually need."],
+    ["Ship the result", "Keep the output stable and easy to maintain."],
+  ];
+
+  return (
+    <section id="workflow" className="section section-alt">
+      <div className="section-head narrow">
+        <SectionLabel>Workflow</SectionLabel>
+        <h2>Feels like a product, not a demo.</h2>
+        <p>The page should move with you, not distract you.</p>
+      </div>
+
+      <div className="workflow">
+        {steps.map(([title, text], index) => (
+          <div key={title} className="workflow-step">
+            <div className="workflow-index">0{index + 1}</div>
+            <div>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Proof() {
+  return (
+    <section id="proof" className="section">
+      <div className="section-head narrow">
+        <SectionLabel>Proof</SectionLabel>
+        <h2>Enough signal to feel real.</h2>
+        <p>Numbers, not hype.</p>
+      </div>
+
+      <div className="metrics-grid">
+        {METRICS.map((metric) => (
+          <div key={metric.label} className="metric-card">
+            <div className="metric-value">{metric.value}</div>
+            <div className="metric-label">{metric.label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Pricing() {
+  return (
+    <section id="pricing" className="section section-alt">
+      <div className="section-head narrow">
+        <SectionLabel>Pricing</SectionLabel>
+        <h2>Simple choices. No fog.</h2>
+        <p>Pick the plan that matches how often you ship.</p>
+      </div>
+
+      <div className="pricing-grid">
+        {PLAN.map((plan) => (
+          <article key={plan.name} className={`price-card ${plan.featured ? "featured" : ""}`}>
+            <div className="price-header">
+              <div>
+                <div className="price-name">{plan.name}</div>
+                <div className="price-note">{plan.note}</div>
+              </div>
+              <div className="price-amount">{plan.price}</div>
+            </div>
+            <ul className="feature-list">
+              {plan.features.map((feature) => (
+                <li key={feature}><Check size={14} /> {feature}</li>
+              ))}
+            </ul>
+            <FloatingButton href={plan.href} className={plan.featured ? "btn-primary full" : "btn-secondary full"}>
+              Choose {plan.name}
+            </FloatingButton>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="footer">
+      <div className="footer-brand">
+        <div className="footer-logo"><Shield size={18} /> AstroProtect</div>
+        <p>Enterprise-grade code protection, presented with a quieter hand.</p>
+      </div>
+      <div className="footer-links">
+        <Link href="#protection">Protection</Link>
+        <Link href="#workflow">Workflow</Link>
+        <Link href="#proof">Proof</Link>
+        <Link href="#pricing">Pricing</Link>
+      </div>
+    </footer>
+  );
+}
+
+export default function Home() {
+  const active = useActiveSection(["protection", "workflow", "proof", "pricing"]);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const haloStyle = useMemo(
-    () => ({ left: `${mouse.x * 100}%`, top: `${mouse.y * 100}%` }),
-    [mouse]
-  );
+  const navClass = useMemo(() => (scrolled ? "nav scrolled" : "nav"), [scrolled]);
 
   return (
-    <div className="ap-page">
-      <style>{`
+    <div className="page-shell">
+      <style jsx global>{`
         :root {
           --bg: #05070c;
-          --bg2: #070b14;
-          --panel: rgba(255,255,255,.045);
-          --panel-strong: rgba(255,255,255,.07);
-          --line: rgba(180,205,255,.12);
-          --line-strong: rgba(180,205,255,.2);
-          --text: rgba(245,248,255,.98);
-          --muted: rgba(201,212,238,.68);
-          --accent: #7c5cff;
-          --accent2: #ff6b9d;
+          --bg2: #090d16;
+          --card: rgba(13, 18, 31, 0.72);
+          --card-border: rgba(255,255,255,0.08);
+          --text: #eef2ff;
+          --muted: rgba(238,242,255,0.66);
+          --accent: #8b7bff;
+          --accent2: #4dd6c9;
         }
         * { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        body { margin: 0; background: var(--bg); color: var(--text); }
-        .ap-page {
-          min-height: 100vh;
+        body {
+          margin: 0;
           background:
-            radial-gradient(circle at 50% 0%, rgba(124,92,255,.16), transparent 28%),
-            radial-gradient(circle at 15% 25%, rgba(255,107,157,.08), transparent 20%),
-            linear-gradient(180deg, #05070c 0%, #04050a 40%, #030409 100%);
-          overflow: hidden;
+            radial-gradient(circle at top left, rgba(139,123,255,.18), transparent 34%),
+            radial-gradient(circle at top right, rgba(77,214,201,.12), transparent 32%),
+            linear-gradient(180deg, var(--bg), var(--bg2));
+          color: var(--text);
+          font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
-        .ap-noise {
-          position: fixed; inset: 0; pointer-events: none; opacity: .05; z-index: 0;
-          background-image: linear-gradient(rgba(255,255,255,.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.7) 1px, transparent 1px);
-          background-size: 34px 34px;
-          mix-blend-mode: overlay;
-        }
-        .ap-halo {
-          position: fixed; width: 560px; height: 560px; border-radius: 50%; pointer-events:none; z-index:0;
-          transform: translate(-50%, -50%); filter: blur(14px);
-          background: radial-gradient(circle, rgba(124,92,255,.14), transparent 66%);
-        }
-        .shell { position: relative; z-index: 1; }
+        a { color: inherit; text-decoration: none; }
+        .page-shell { min-height: 100vh; position: relative; overflow: hidden; }
         .nav {
-          position: sticky; top: 0; z-index: 30; backdrop-filter: blur(18px);
-          background: rgba(4,7,12,.55); border-bottom: 1px solid rgba(255,255,255,.05);
+          position: sticky; top: 0; z-index: 20;
+          display: flex; justify-content: center;
+          padding: 18px 20px; backdrop-filter: blur(10px);
+          transition: background .2s ease, border-color .2s ease;
         }
-        .nav-inner, .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
-        .nav-inner { height: 78px; display:flex; align-items:center; justify-content:space-between; gap: 24px; }
-        .brand { display:flex; align-items:center; gap: 12px; text-decoration:none; color: var(--text); font-weight: 800; letter-spacing: -.03em; }
-        .brand-mark {
-          width: 38px; height: 38px; border-radius: 13px; display:grid; place-items:center;
-          background: linear-gradient(180deg, rgba(124,92,255,.9), rgba(55,40,140,.95));
-          box-shadow: 0 14px 38px rgba(124,92,255,.25);
+        .nav.scrolled { background: rgba(5,7,12,.72); border-bottom: 1px solid rgba(255,255,255,.05); }
+        .nav-inner {
+          width: min(1180px, 100%);
+          display: flex; align-items: center; justify-content: space-between; gap: 20px;
         }
-        .nav-links { display:flex; gap: 8px; align-items:center; }
-        .nav-links a {
-          padding: 10px 14px; border-radius: 999px; text-decoration:none; color: var(--muted);
-          border: 1px solid transparent; transition: .2s ease;
+        .brand { display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.02em; }
+        .nav-links { display:flex; gap: 18px; flex-wrap: wrap; color: var(--muted); }
+        .nav-links a { position: relative; padding-bottom: 4px; }
+        .nav-links a.active, .nav-links a:hover { color: var(--text); }
+        .nav-links a.active::after {
+          content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1px;
+          background: linear-gradient(90deg, transparent, var(--accent), transparent);
         }
-        .nav-links a.active, .nav-links a:hover { color: var(--text); border-color: var(--line); background: rgba(255,255,255,.03); }
+        .nav-cta { display:flex; gap: 10px; }
+        .hero, .section, .footer { width: min(1180px, 100%); margin: 0 auto; padding: 0 20px; }
+        .hero { padding-top: 62px; padding-bottom: 42px; position: relative; }
+        .hero-grid { display:grid; grid-template-columns: 1.18fr .82fr; gap: 28px; align-items: center; }
+        .hero h1 { font-size: clamp(44px, 6vw, 88px); line-height: .95; margin: 12px 0 18px; letter-spacing: -0.05em; }
+        .hero-lead { max-width: 640px; color: var(--muted); font-size: 1.05rem; line-height: 1.7; }
+        .section-label {
+          display:inline-flex; align-items:center; gap:8px; padding: 8px 12px;
+          border: 1px solid rgba(255,255,255,.08); border-radius: 999px; color: var(--muted);
+          background: rgba(255,255,255,.03); font-size: .8rem; letter-spacing: .08em; text-transform: uppercase;
+        }
+        .hero-actions, .footer-links { display:flex; gap: 12px; flex-wrap: wrap; }
         .btn {
-          display:inline-flex; align-items:center; gap: 10px; text-decoration:none; font-weight: 700;
-          padding: 14px 18px; border-radius: 999px; transition: transform .2s ease, background .2s ease, border-color .2s ease;
+          display:inline-flex; align-items:center; gap:10px; justify-content:center;
+          padding: 13px 18px; border-radius: 999px; border: 1px solid rgba(255,255,255,.1);
+          background: rgba(255,255,255,.04); transition: transform .2s ease, border-color .2s ease, background .2s ease;
         }
-        .btn:hover { transform: translateY(-1px); }
-        .btn-primary {
-          background: linear-gradient(180deg, rgba(124,92,255,1), rgba(82,58,197,1)); color: white; box-shadow: 0 18px 48px rgba(124,92,255,.22);
+        .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.22); }
+        .btn-primary { background: linear-gradient(135deg, rgba(139,123,255,.96), rgba(77,214,201,.9)); color: #041018; }
+        .btn-secondary { color: var(--text); }
+        .hero-badges { display:flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; color: var(--muted); }
+        .hero-badges span {
+          display:inline-flex; align-items:center; gap:8px; padding: 9px 12px; border-radius: 999px;
+          background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
         }
-        .btn-secondary { border: 1px solid var(--line); color: var(--text); background: rgba(255,255,255,.03); }
-        .hero { padding: 92px 24px 84px; }
-        .hero-grid {
-          max-width: 1180px; margin: 0 auto; display:grid; grid-template-columns: 1.05fr .95fr; gap: 44px; align-items:center;
+        .hero-panel, .layer-card, .metric-card, .price-card, .workflow-step {
+          background: var(--card); border: 1px solid var(--card-border); box-shadow: 0 30px 80px rgba(0,0,0,.32);
+          backdrop-filter: blur(18px);
         }
-        .eyebrow {
-          display:inline-flex; align-items:center; gap: 8px; padding: 8px 12px; border: 1px solid var(--line);
-          border-radius: 999px; background: rgba(255,255,255,.025); color: var(--muted); font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+        .hero-panel { border-radius: 28px; padding: 18px; position: relative; overflow: hidden; }
+        .panel-top { display:flex; gap: 8px; padding-bottom: 18px; }
+        .panel-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.18); }
+        .panel-shell { border-radius: 22px; padding: 26px; background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); }
+        .panel-title { color: var(--muted); text-transform: uppercase; font-size: .78rem; letter-spacing: .14em; }
+        .panel-code { padding: 22px 0; display:grid; gap: 14px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+        .muted { color: var(--muted); display:inline-block; width: 82px; }
+        .panel-footer { display:flex; align-items:center; justify-content:space-between; color: var(--muted); }
+        .hero-glow { position:absolute; inset:auto; width: 360px; height: 360px; filter: blur(70px); opacity: .7; pointer-events:none; }
+        .hero-glow-left { left: -80px; top: 40px; background: rgba(139,123,255,.2); }
+        .hero-glow-right { right: -100px; top: 180px; background: rgba(77,214,201,.16); }
+        .section { padding-top: 70px; padding-bottom: 24px; }
+        .section-alt { padding-top: 32px; }
+        .section-head { max-width: 760px; margin-bottom: 24px; }
+        .section-head.narrow { max-width: 620px; }
+        .section-head h2 { font-size: clamp(30px, 4vw, 56px); line-height: 1; margin: 14px 0; letter-spacing: -.04em; }
+        .section-head p { color: var(--muted); line-height: 1.7; }
+        .layer-grid, .metrics-grid, .pricing-grid { display:grid; gap: 16px; }
+        .layer-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        .layer-card { border-radius: 22px; padding: 20px; }
+        .layer-icon { width: 42px; height: 42px; border-radius: 12px; display:grid; place-items:center; background: rgba(255,255,255,.06); margin-bottom: 16px; }
+        .layer-card p, .workflow-step p, .price-note { color: var(--muted); line-height: 1.65; }
+        .workflow { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+        .workflow-step { border-radius: 22px; padding: 22px; display:flex; gap: 16px; }
+        .workflow-index { color: var(--accent); font-weight: 700; letter-spacing: .08em; }
+        .metrics-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .metric-card { border-radius: 22px; padding: 24px; }
+        .metric-value { font-size: clamp(28px, 4vw, 46px); font-weight: 700; letter-spacing: -.04em; }
+        .metric-label { margin-top: 6px; color: var(--muted); }
+        .pricing-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .price-card { border-radius: 24px; padding: 24px; }
+        .price-card.featured { outline: 1px solid rgba(139,123,255,.36); transform: translateY(-8px); }
+        .price-header { display:flex; align-items:flex-start; justify-content:space-between; gap: 16px; margin-bottom: 20px; }
+        .price-name { font-size: 1.05rem; font-weight: 700; }
+        .price-amount { font-size: 2.5rem; font-weight: 700; letter-spacing: -.05em; }
+        .feature-list { list-style:none; padding:0; margin:0 0 20px; display:grid; gap: 12px; color: var(--text); }
+        .feature-list li { display:flex; align-items:center; gap: 10px; color: var(--muted); }
+        .full { width: 100%; }
+        .footer {
+          padding-top: 42px; padding-bottom: 54px; display:flex; justify-content:space-between; gap: 20px;
+          border-top: 1px solid rgba(255,255,255,.06); margin-top: 60px;
         }
-        h1 {
-          margin: 18px 0 18px; font-size: clamp(52px, 7vw, 98px); line-height: .93; letter-spacing: -.07em; max-width: 11ch;
+        .footer-logo { display:flex; align-items:center; gap: 10px; font-weight: 700; margin-bottom: 10px; }
+        .footer p { color: var(--muted); max-width: 480px; line-height: 1.6; }
+        @media (max-width: 1100px) {
+          .layer-grid, .metrics-grid, .pricing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .hero-grid { grid-template-columns: 1fr; }
         }
-        .lead { color: var(--muted); line-height: 1.85; font-size: 16px; max-width: 58ch; }
-        .hero-actions { display:flex; gap: 12px; flex-wrap:wrap; margin-top: 30px; }
-        .hero-panel {
-          position: relative; height: 640px; display:grid; place-items:center; perspective: 1200px;
-        }
-        .core {
-          position: relative; width: 380px; height: 380px; transform-style: preserve-3d;
-          filter: drop-shadow(0 0 70px rgba(124,92,255,.18));
-        }
-        .ring, .ring:before, .ring:after, .orbit, .grid, .grid:before {
-          position:absolute; inset: 0; border-radius: 50%;
-        }
-        .ring { border: 1px solid rgba(170,190,255,.18); background: radial-gradient(circle at 50% 36%, rgba(124,92,255,.2), rgba(12,18,34,.08) 58%, transparent 66%); }
-        .ring.r2 { inset: 28px; transform: rotateX(66deg) rotateZ(18deg); border-color: rgba(170,190,255,.28); }
-        .ring.r3 { inset: 66px; transform: rotateY(72deg) rotateZ(-14deg); border-color: rgba(170,190,255,.36); }
-        .grid {
-          inset: 52px; border-radius: 28px; border: 1px solid rgba(180,205,255,.12);
-          background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.012));
-          transform: translateZ(36px) rotateX(11deg) rotateY(-16deg);
-        }
-        .grid:before, .grid:after {
-          content:""; position:absolute; inset: 0; border-radius: inherit; background-image: linear-gradient(rgba(124,92,255,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(124,92,255,.16) 1px, transparent 1px); background-size: 28px 28px; opacity: .8; mask: linear-gradient(180deg, #000 50%, transparent);
-        }
-        .grid:after { inset: 18px; opacity: .38; transform: rotate(9deg); }
-        .orb {
-          position:absolute; border-radius: 50%; background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.96), rgba(124,92,255,.75) 28%, rgba(124,92,255,.1) 62%, transparent 72%);
-          box-shadow: 0 0 46px rgba(124,92,255,.35);
-        }
-        .orb.a { width: 96px; height: 96px; top: 14%; left: 12%; }
-        .orb.b { width: 76px; height: 76px; right: 12%; bottom: 20%; }
-        .orb.c { width: 54px; height: 54px; left: 50%; bottom: 12%; transform: translateX(-50%); }
-        .section { padding: 0 24px 112px; }
-        .section-title { max-width: 760px; margin-bottom: 34px; }
-        .section-title h2 { margin: 12px 0 12px; font-size: clamp(32px, 4.6vw, 58px); line-height: 1.02; letter-spacing: -.055em; }
-        .section-title p { margin: 0; color: var(--muted); line-height: 1.8; max-width: 62ch; }
-        .panel {
-          max-width: 1180px; margin: 0 auto; padding: 28px; border-radius: 28px; border: 1px solid var(--line);
-          background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018)); backdrop-filter: blur(18px);
-        }
-        .stats { display:grid; grid-template-columns: repeat(3,1fr); gap: 1px; overflow:hidden; }
-        .stat { padding: 26px 20px; text-align:center; background: rgba(255,255,255,.02); }
-        .stat-icon { width: 40px; height: 40px; margin: 0 auto 12px; border-radius: 12px; display:grid; place-items:center; background: rgba(124,92,255,.12); color: #c5b9ff; }
-        .stat-value { font-size: 30px; font-weight: 900; letter-spacing: -.04em; }
-        .stat-label { color: var(--muted); font-size: 13px; margin-top: 6px; }
-        .grid-3 { display:grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
-        .card {
-          position: relative; min-height: 250px; padding: 28px; border-radius: 24px; border: 1px solid var(--line);
-          background: linear-gradient(180deg, rgba(255,255,255,.044), rgba(255,255,255,.02)); overflow:hidden;
-        }
-        .card:before {
-          content:""; position:absolute; inset:-20% auto auto 42%; width: 220px; height: 220px; background: radial-gradient(circle, rgba(124,92,255,.14), transparent 64%); pointer-events:none;
-        }
-        .card-icon { width: 42px; height: 42px; border-radius: 12px; display:grid; place-items:center; background: rgba(124,92,255,.12); color:#d6d0ff; margin-bottom: 18px; }
-        .card h3 { margin: 0 0 10px; font-size: 22px; line-height: 1.14; letter-spacing: -.03em; }
-        .card p { margin: 0; color: var(--muted); line-height: 1.75; }
-        .timeline { display:grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
-        .step { padding: 22px; border-radius: 22px; border: 1px solid var(--line); background: rgba(255,255,255,.03); }
-        .step kbd { display:inline-grid; place-items:center; width: 44px; height: 44px; border-radius: 14px; margin-bottom: 18px; background: rgba(124,92,255,.12); border: 1px solid rgba(170,190,255,.16); color: #d7d0ff; font-weight: 800; }
-        .step h3 { margin: 0 0 10px; font-size: 18px; }
-        .step p { margin: 0; color: var(--muted); line-height: 1.72; }
-        .compare { overflow:hidden; border-radius: 26px; border: 1px solid var(--line); background: rgba(255,255,255,.03); }
-        .compare-head, .compare-row { display:grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 16px; padding: 18px 22px; }
-        .compare-head { color: rgba(222,232,255,.45); font-size: 11px; letter-spacing:.16em; text-transform:uppercase; border-bottom: 1px solid var(--line); }
-        .compare-row { border-bottom: 1px solid rgba(255,255,255,.06); }
-        .compare-row:last-child { border-bottom:none; }
-        .pill { display:inline-flex; align-items:center; gap: 8px; }
-        .pill.ok { color: #c7d6ff; }
-        .pill.no { color: rgba(255,145,145,.85); }
-        .pricing { display:grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
-        .plan { padding: 28px; border-radius: 24px; border: 1px solid var(--line); background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)); }
-        .plan.featured { border-color: rgba(124,92,255,.28); box-shadow: 0 20px 60px rgba(124,92,255,.14); transform: translateY(-8px); }
-        .plan h3 { margin: 0 0 6px; font-size: 22px; }
-        .plan .note { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
-        .price { font-size: 54px; font-weight: 900; letter-spacing: -.06em; margin-bottom: 16px; }
-        .plan ul { list-style:none; padding:0; margin:0 0 24px; display:grid; gap: 10px; }
-        .plan li { display:flex; gap: 10px; color: rgba(230,236,248,.86); line-height: 1.5; }
-        .final { text-align:center; padding-bottom: 140px; }
-        .final .panel { max-width: 760px; padding: 44px 24px; }
-        .final h2 { margin: 14px auto 14px; font-size: clamp(34px, 5vw, 64px); line-height: 1.02; letter-spacing: -.055em; max-width: 12ch; }
-        .final p { margin: 0 auto 28px; max-width: 56ch; color: var(--muted); line-height: 1.8; }
-        @media (max-width: 980px) {
-          .hero-grid, .grid-3, .timeline, .pricing { grid-template-columns: 1fr; }
-          .nav-links { display:none; }
-          .hero { padding-top: 72px; }
-          .hero-panel { height: 470px; }
-          .plan.featured { transform:none; }
-          .stats { grid-template-columns: 1fr; }
-          .compare-head, .compare-row { grid-template-columns: 1.15fr 1fr 1fr; }
+        @media (max-width: 720px) {
+          .nav-inner { flex-direction: column; align-items: flex-start; }
+          .workflow { grid-template-columns: 1fr; }
+          .layer-grid, .metrics-grid, .pricing-grid { grid-template-columns: 1fr; }
+          .footer { flex-direction: column; }
+          .hero h1 { font-size: clamp(38px, 12vw, 58px); }
         }
       `}</style>
 
-      <div className="ap-noise" />
-      <div className="ap-halo" style={haloStyle} />
-
-      <div className="shell">
-        <header className="nav">
-          <div className="nav-inner">
-            <Link href="/" className="brand">
-              <span className="brand-mark"><Sparkles size={16} /></span>
-              <span>Astro-style Core</span>
-            </Link>
-            <nav className="nav-links">
-              {NAV.map((item) => (
-                <a key={item.id} href={`#${item.id}`} className={active === item.id ? "active" : ""}>{item.label}</a>
-              ))}
-            </nav>
-            <Link href={session ? "/dashboard" : "/login"} className="btn btn-secondary">Login</Link>
+      <header className={navClass}>
+        <div className="nav-inner">
+          <Link href="/" className="brand">
+            <Shield size={18} />
+            <span>AstroProtect</span>
+          </Link>
+          <nav className="nav-links">
+            {NAV.map((item) => (
+              <Link key={item.id} href={`#${item.id}`} className={active === item.id ? "active" : ""}>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="nav-cta">
+            <Link href="/login" className="btn btn-secondary">Login</Link>
+            <Link href="/register" className="btn btn-primary">Get started</Link>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <section className="hero" ref={heroRef} onMouseMove={(e) => {
-          const r = e.currentTarget.getBoundingClientRect();
-          const x = (e.clientX - r.left) / r.width;
-          const y = (e.clientY - r.top) / r.height;
-          setMouse({ x, y });
-        }}>
-          <div className="hero-grid">
-            <div>
-              <div className="eyebrow"><Sparkles size={12} /> protection engine</div>
-              <h1>Protect everything with depth, motion, and control.</h1>
-              <p className="lead">A sharp, cinematic landing page with a real 3D center, layered glass surfaces, and interaction that feels designed rather than decorated.</p>
-              <div className="hero-actions">
-                <Link href={session ? "/dashboard" : "/login"} className="btn btn-primary">Get started <ArrowRight size={16} /></Link>
-                <a href="#workflow" className="btn btn-secondary">See the workflow <ChevronRight size={16} /></a>
+      <main>
+        <Hero />
+        <div className="section">
+          <div className="metrics-grid">
+            {METRICS.map((metric) => (
+              <div key={metric.label} className="metric-card">
+                <div className="metric-value">{metric.value}</div>
+                <div className="metric-label">{metric.label}</div>
               </div>
-            </div>
-
-            <div className="hero-panel">
-              <motion.div className="core" style={{ rotateX: rotX, rotateY: rotY }}>
-                <div className="ring" />
-                <div className="ring r2" />
-                <div className="ring r3" />
-                <div className="grid" />
-                <div className="orb a" />
-                <div className="orb b" />
-                <div className="orb c" />
-              </motion.div>
-            </div>
+            ))}
           </div>
-        </section>
+        </div>
+        <Protection />
+        <Workflow />
+        <Proof />
+        <Pricing />
+      </main>
 
-        <section className="section">
-          <SectionTitle eyebrow="Live signals" title="A control surface, not a brochure." text="The numbers are treated like part of the composition so the page feels operational without turning sterile." />
-          <div className="panel stats">
-            {METRICS.map((m) => <Stat key={m.label} icon={m.label.includes("response") ? Gauge : m.label.includes("signals") ? Cpu : Shield} {...m} />)}
-          </div>
-        </section>
-
-        <section className="section" id="workflow">
-          <div className="wrap">
-            <SectionTitle eyebrow="Workflow" title="The page unfolds like a system reveal." text="Every section advances the same story: establish the core, expand the layers, then close with a clean decision point." />
-            <div className="timeline">
-              {STEPS.map((s) => (
-                <div key={s.k} className="step">
-                  <kbd>{s.k}</kbd>
-                  <h3>{s.title}</h3>
-                  <p>{s.text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section" id="protection">
-          <div className="wrap">
-            <SectionTitle eyebrow="Protection" title="Built from layers that work together." text="Each block keeps the visual language tight while still showing enough depth to feel premium." />
-            <div className="grid-3">
-              {LAYERS.map((layer) => {
-                const Icon = layer.icon;
-                return (
-                  <article key={layer.title} className="card">
-                    <div className="card-icon"><Icon size={18} /></div>
-                    <h3>{layer.title}</h3>
-                    <p>{layer.text}</p>
-                  </article>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        <section className="section" id="proof">
-          <div className="wrap">
-            <SectionTitle eyebrow="Proof" title="Quiet confidence, backed by structure." text="The comparison keeps the tone restrained and direct, so the product reads as serious and real." />
-            <div className="compare">
-              <div className="compare-head"><div>Capability</div><div>Astro-style core</div><div>Generic stack</div></div>
-              {[
-                ["Depth", "3D + glass + motion", "Flat panels"],
-                ["Hierarchy", "Cinematic, clear", "Mixed"],
-                ["Interaction", "Intentional, tactile", "Basic hover"],
-                ["System feel", "Unified product story", "Disconnected UI"],
-              ].map((row) => (
-                <div key={row[0]} className="compare-row">
-                  <div>{row[0]}</div>
-                  <div><span className="pill ok"><Check size={14} /> {row[1]}</span></div>
-                  <div><span className="pill no">{row[2]}</span></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section" id="pricing">
-          <div className="wrap">
-            <SectionTitle eyebrow="Pricing" title="Simple tiers, no filler." text="The pricing cards are designed to read quickly and feel expensive without shouting." />
-            <div className="pricing">
-              {PLANS.map((plan) => (
-                <article key={plan.name} className={`plan ${plan.featured ? "featured" : ""}`}>
-                  <h3>{plan.name}</h3>
-                  <div className="note">{plan.note}</div>
-                  <div className="price">{plan.price}</div>
-                  <ul>
-                    {plan.points.map((point) => (
-                      <li key={point}><Check size={15} style={{ color: "#b7c7ff", flexShrink: 0, marginTop: 2 }} /> <span>{point}</span></li>
-                    ))}
-                  </ul>
-                  <Link href={session ? "/dashboard" : "/login"} className={plan.featured ? "btn btn-primary" : "btn btn-secondary"} style={{ width: "100%", justifyContent: "center" }}>
-                    {plan.featured ? "Choose Pro" : "Start here"}
-                  </Link>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section final">
-          <div className="panel">
-            <div className="eyebrow" style={{ margin: "0 auto" }}>Final call</div>
-            <h2>Bring the core into your workflow.</h2>
-            <p>Keep the page clean, deep, and responsive — with enough motion to feel premium and enough restraint to feel real.</p>
-            <Link href={session ? "/dashboard" : "/login"} className="btn btn-primary">Begin the experience <ArrowRight size={16} /></Link>
-          </div>
-        </section>
-      </div>
+      <Footer />
     </div>
   );
 }
