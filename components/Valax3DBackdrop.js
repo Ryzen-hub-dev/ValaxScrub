@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
 function buildParticleRing(count = 180) {
@@ -25,10 +25,9 @@ export default function Valax3DBackdrop({ focus = "hero", visible = true }) {
   const hostRef = useRef(null);
   const apiRef = useRef(null);
 
-  const reducedMotion = useMemo(() => {
-    if (typeof window === "undefined") return true;
-    return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
-  }, []);
+  const reducedMotion = typeof window !== "undefined"
+    ? window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false
+    : true;
 
   useEffect(() => {
     const host = hostRef.current;
