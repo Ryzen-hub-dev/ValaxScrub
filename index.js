@@ -11,6 +11,8 @@ import {
 import PublicNav from "../components/PublicNav";
 import PublicFooter from "../components/PublicFooter";
 import WaveBackground from "../components/WaveBackground";
+import Valax3DBackdrop from "../components/Valax3DBackdrop";
+import useActiveSection from "../components/useActiveSection";
 import config from "../config.json";
 import pricingData from "../pricing.json";
 
@@ -162,6 +164,7 @@ function CompareIcon({ type, text }) {
 
 export default function HomeClient({ session }) {
   const [stats, setStats] = useState(null);
+  const activeSection = useActiveSection(["hero", "features", "why", "security", "compare", "pricing"]);
   useEffect(() => { fetch("/api/stats").then((r) => r.json()).then(setStats).catch(() => {}); }, []);
 
   return (
@@ -204,6 +207,7 @@ export default function HomeClient({ session }) {
 
       {/* ── Hero ── */}
       <section
+        id="hero"
         style={{
           position: "relative",
           textAlign: "center",
@@ -211,6 +215,7 @@ export default function HomeClient({ session }) {
           overflow: "hidden",
         }}
       >
+        <Valax3DBackdrop focus={activeSection === "security" ? "security" : activeSection === "pricing" ? "pricing" : activeSection === "features" ? "features" : "hero"} visible />
         <div className="bg-grid-fade" />
         <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 60% 45% at 50% 0%, var(--accent-glow), transparent)", pointerEvents: "none" }} />
         <div className="glow-orb hero-orb" style={{ width: 320, height: 320, top: -60, left: "18%", background: "var(--accent)", opacity: 0.22 }} />
