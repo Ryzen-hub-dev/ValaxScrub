@@ -8,13 +8,13 @@ import {
   Lock, Fingerprint, BarChart3, Key, Zap, Code2,
   FileCode2, Activity, Check, Minus, X,
 } from "lucide-react";
-import PublicNav from "../components/PublicNav";
-import PublicFooter from "../components/PublicFooter";
-import WaveBackground from "../components/WaveBackground";
-import Valax3DBackdrop from "../components/Valax3DBackdrop";
-import useActiveSection from "../components/useActiveSection";
-import config from "../config.json";
-import pricingData from "../pricing.json";
+import PublicNav from "./components/PublicNav";
+import PublicFooter from "./components/PublicFooter";
+import WaveBackground from "./components/WaveBackground";
+import Valax3DBackdrop from "./components/Valax3DBackdrop";
+import useActiveSection from "./components/useActiveSection";
+import config from "./config.json";
+import pricingData from "./pricing.json";
 
 const CORE_FEATURES = [
   {
